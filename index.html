@@ -12,46 +12,52 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            #reportModal, #reportModal * {
-                visibility: visible;
-            }
-            #reportModal {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: auto;
-                background: white !important;
-            }
-            #reportModalContent {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                margin: 0;
-                padding: 10px;
-                box-shadow: none !important;
-                background: white !important;
-                overflow: visible !important;
-                max-height: none !important;
-            }
-            .no-print {
-                display: none !important;
-            }
-            tr {
-                page-break-inside: avoid;
-            }
-            table {
-                page-break-after: auto;
-            }
+            body * { visibility: hidden; }
+            #reportModal, #reportModal * { visibility: visible; }
+            #reportModal { position: absolute; left: 0; top: 0; width: 100%; height: auto; background: white !important; }
+            #reportModalContent { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 10px; box-shadow: none !important; background: white !important; overflow: visible !important; max-height: none !important; }
+            .no-print { display: none !important; }
+            tr { page-break-inside: avoid; }
+            table { page-break-after: auto; }
         }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between antialiased" onclick="closeDropdownOutside(event)">
 
+    <!-- LOGIN MODAL -->
+    <div id="loginModal" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md p-6 sm:p-8 space-y-6">
+            <div class="text-center space-y-2">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-100 mb-1">
+                    <i class="fa-solid fa-lock text-xl"></i>
+                </div>
+                <h2 class="text-xl font-bold text-slate-900">Системд нэвтрэх</h2>
+                <p class="text-xs text-slate-500">Төв диспетчерийн алба - Технологи, холбооны хэсэг</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Ажилтны нэр / Хэрэглэгч</label>
+                    <select id="loginUserSelect" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                        <option value="">Нэрээ сонгоно уу...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">Нууц үг</label>
+                    <input type="password" id="loginPassword" required placeholder="Нууц үгээ оруулна уу" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                </div>
+                <div id="loginErrorMsg" class="hidden text-xs text-rose-600 bg-rose-50 border border-rose-200 p-2.5 rounded-xl text-center font-medium">
+                    Нууц үг буруу байна!
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition shadow-md shadow-indigo-100 flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-right-to-bracket"></i>
+                    <span>Нэвтрэх</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
     <div>
         <!-- Header -->
         <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
@@ -71,25 +77,35 @@
                         </p>
                     </div>
                 </div>
+
                 <div class="flex items-center space-x-2 sm:space-x-3">
-    <!-- 1. Шинэчлэх товч -->
-    <button onclick="fetchLogsFromSheet()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center space-x-1.5" title="Дата шинэчлэх">
-        <i class="fa-solid fa-rotate"></i>
-        <span class="hidden sm:inline">Шинэчлэх</span>
-    </button>
+                    <!-- Хэрэглэгчийн таг & Гарах товч -->
+                    <div class="flex items-center space-x-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+                        <i class="fa-regular fa-user text-indigo-600 text-xs"></i>
+                        <span id="headerUserName" class="text-xs font-bold text-slate-800">Зочин</span>
+                        <button onclick="handleLogout()" class="text-[11px] text-rose-600 hover:text-rose-800 font-semibold pl-1.5 border-l border-slate-300 transition" title="Системээс гарах">
+                            Гарах
+                        </button>
+                    </div>
 
-    <!-- 2. Аналитик Дашбоард товч (ШИНЭ) -->
-    <a href="dashboard.html" target="_blank" class="inline-flex items-center space-x-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs">
-        <i class="fa-solid fa-chart-pie text-emerald-600"></i>
-        <span>Аналитик Дашбоард</span>
-    </a>
+                    <!-- Шинэчлэх товч -->
+                    <button onclick="fetchLogsFromSheet()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center space-x-1.5" title="Дата шинэчлэх">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span class="hidden sm:inline">Шинэчлэх</span>
+                    </button>
 
-    <!-- 3. Нэгдсэн тайлан харах товч -->
-    <button onclick="openGlobalReportModal()" class="inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm shadow-indigo-100">
-        <i class="fa-solid fa-file-invoice"></i>
-        <span>Нэгдсэн тайлан харах</span>
-    </button>
-</div>
+                    <!-- Аналитик Дашбоард товч -->
+                    <a href="dashboard.html" target="_blank" class="inline-flex items-center space-x-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs">
+                        <i class="fa-solid fa-chart-pie text-emerald-600"></i>
+                        <span class="hidden md:inline">Аналитик Дашбоард</span>
+                    </a>
+
+                    <!-- Нэгдсэн тайлан харах товч -->
+                    <button onclick="openGlobalReportModal()" class="inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm shadow-indigo-100">
+                        <i class="fa-solid fa-file-invoice"></i>
+                        <span class="hidden sm:inline">Нэгдсэн тайлан</span>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -213,7 +229,7 @@
                         </div>
                     </div>
 
-                    <!-- Бригадын бүрэлдэхүүн (Custom Dropdown) -->
+                    <!-- Бригадын бүрэлдэхүүн -->
                     <div class="relative">
                         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center space-x-1.5">
                             <i class="fa-solid fa-users-gear text-indigo-500 w-4"></i>
@@ -367,7 +383,6 @@
             </div>
 
             <div id="reportModalContent" class="p-8 overflow-y-auto space-y-6 flex-grow bg-white text-slate-800">
-                
                 <div class="text-center border-b border-slate-200 pb-6">
                     <h2 class="text-xl font-bold text-slate-900 uppercase tracking-wide">Ажил гүйцэтгэлийн тэмдэглэл тайлан</h2>
                     <p class="text-xs text-slate-500 mt-1">Диспетчерийн үндэсний төв ТӨХХК - Төв диспетчерийн алба (ТХХэсэг)</p>
@@ -391,17 +406,17 @@
                 <div>
                     <div class="overflow-x-auto border border-slate-200 rounded-xl">
                         <table class="w-full text-left border-collapse text-xs">
-                           <thead>
-    <tr class="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200 text-[11px]">
-        <th class="p-3 text-center w-10">№</th>
-        <th class="p-3 w-40">Байршил</th>
-        <th class="p-3 text-center w-24">Няряд №</th>
-        <th class="p-3 w-36">Ажилласан хугацаа</th>
-        <th class="p-3">Хийгдсэн ажил</th>
-        <th class="p-3">Бригадын бүрэлдэхүүн</th>
-        <th class="p-3 text-right w-28">Нийт цаг</th>
-    </tr>
-</thead>
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200 text-[11px]">
+                                    <th class="p-3 text-center w-10">№</th>
+                                    <th class="p-3 w-40">Байршил</th>
+                                    <th class="p-3 text-center w-24">Няряд №</th>
+                                    <th class="p-3 w-36">Ажилласан хугацаа</th>
+                                    <th class="p-3">Хийгдсэн ажил</th>
+                                    <th class="p-3">Бригадын бүрэлдэхүүн</th>
+                                    <th class="p-3 text-right w-28">Нийт цаг</th>
+                                </tr>
+                            </thead>
                             <tbody id="reportTableBody" class="divide-y divide-slate-200">
                                 <!-- Dynamic rows -->
                             </tbody>
@@ -441,6 +456,21 @@
     <script>
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDqxUsI07eMWhF4FSqKJ2Fr_g5GHr02ibzPi-SsyqSWn9eo7QQ4Ldf_g8xtplURNAy/exec";
 
+        // ХЭРЭГЛЭГЧДИЙН ЖАГСААЛТ БА ЭРХ
+        const USERS = [
+            { username: "ganzorig", name: "Ц.Ганзориг", pass: "1234", role: "admin" }, // Админ эрхтэй
+            { username: "enkhbayasgalan", name: "М.Энхбаясгалан", pass: "1234", role: "user" },
+            { username: "gereltod", name: "Г.Гэрэлт-Од", pass: "1234", role: "user" },
+            { username: "battumur", name: "Д.Баттөмөр", pass: "1234", role: "user" },
+            { username: "anar", name: "Н.Анар", pass: "1234", role: "user" },
+            { username: "batkhuu", name: "Б.Батхүү", pass: "1234", role: "user" },
+            { username: "byambadorj", name: "О.Бямбадорж", pass: "1234", role: "user" },
+            { username: "davaanyam", name: "Б.Давааням", pass: "1234", role: "user" },
+            { username: "natsagdorj", name: "Д.Нацагдорж", pass: "1234", role: "user" }
+        ];
+
+        let currentUser = null;
+
         const brigadeStaffList = [
             { name: "Ц.Ганзориг", role: "Тоолуурын нэгдсэн системийн инженер" },
             { name: "М.Энхбаясгалан", role: "Электроникийн инженер" },
@@ -458,60 +488,112 @@
         const itemsPerPage = 4;
 
         window.onload = function() {
-    populateBrigadeDropdown();
-    setDefaultDates();
-    fetchLogsFromSheet();
-};
+            checkAuth();
+            populateLoginUserSelect();
+            populateBrigadeDropdown();
+            setDefaultDates();
+            fetchLogsFromSheet();
+        };
 
-       function formatDateString(dateStr) {
-            if (!dateStr) return '';
-            if (dateStr.includes('T')) {
-                return dateStr.split('T')[0];
+        // --- AUTH LOGIC ---
+        function checkAuth() {
+            const saved = sessionStorage.getItem('currentUser');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                document.getElementById('loginModal').classList.add('hidden');
+                document.getElementById('headerUserName').innerText = currentUser.name + (currentUser.role === 'admin' ? ' (Админ)' : '');
+            } else {
+                document.getElementById('loginModal').classList.remove('hidden');
             }
-            return dateStr;
         }
 
-       function fetchLogsFromSheet() {
-    const container = document.getElementById('logsContainer');
-    if (container) {
-        container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Мэдээлэл татаж байна...</div>`;
-    }
+        function populateLoginUserSelect() {
+            const select = document.getElementById('loginUserSelect');
+            select.innerHTML = '<option value="">Нэрээ сонгоно уу...</option>' + 
+                USERS.map(u => `<option value="${u.username}">${u.name} ${u.role === 'admin' ? '(Админ)' : ''}</option>`).join('');
+        }
 
-    fetch(`${GOOGLE_SCRIPT_URL}?action=get`)
-        .then(res => res.json())
-        .then(data => {
-            if (!Array.isArray(data)) {
-                console.error("Өгөгдөл буруу форматтай байна:", data);
-                return;
+        function handleLogin(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUserSelect').value;
+            const pass = document.getElementById('loginPassword').value;
+            const errorMsg = document.getElementById('loginErrorMsg');
+
+            const found = USERS.find(u => u.username === username && u.pass === pass);
+            if (found) {
+                currentUser = found;
+                sessionStorage.setItem('currentUser', JSON.stringify(found));
+                document.getElementById('loginModal').classList.add('hidden');
+                document.getElementById('headerUserName').innerText = currentUser.name + (currentUser.role === 'admin' ? ' (Админ)' : '');
+                errorMsg.classList.add('hidden');
+                renderLogs();
+            } else {
+                errorMsg.classList.remove('hidden');
             }
+        }
 
-            workLogs = data.map(log => ({
-                ...log,
-                startDate: formatDateString(log.startDate),
-                endDate: formatDateString(log.endDate)
-            })).sort((a, b) => {
-                // Огноог аюулгүй шалгах логик (null / хоосон байсан ч гацахгүй)
-                const dateA = a.startDate || '';
-                const timeA = a.startTime || '00:00';
-                const dateB = b.startDate || '';
-                const timeB = b.startTime || '00:00';
+        function handleLogout() {
+            if (confirm("Системээс гарахдаа итгэлтэй байна уу?")) {
+                sessionStorage.removeItem('currentUser');
+                currentUser = null;
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginModal').classList.remove('hidden');
+                renderLogs();
+            }
+        }
 
-                const dtA = new Date(`${dateA}T${timeA}`).getTime() || 0;
-                const dtB = new Date(`${dateB}T${timeB}`).getTime() || 0;
+        function formatDateString(dateStr) {
+            if (!dateStr) return '';
+            return String(dateStr).includes('T') ? String(dateStr).split('T')[0] : String(dateStr);
+        }
 
-                return dtB - dtA; // Хамгийн сүүлийн огноо хамгийн дээрээ гарна
-            });
+        function parseArrayField(field, separator = ',') {
+            if (!field) return [];
+            if (Array.isArray(field)) return field;
+            return String(field).split(separator).map(s => s.trim()).filter(Boolean);
+        }
 
-            updateFilterDropdowns();
-            renderLogs();
-        })
-        .catch(err => {
-            console.error("Дата татахад алдаа гарлаа:", err);
+        function fetchLogsFromSheet() {
+            const container = document.getElementById('logsContainer');
             if (container) {
-                container.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Мэдээлэл татахад алдаа гарлаа.</div>`;
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Мэдээлэл татаж байна...</div>`;
             }
-        });
-}
+
+            fetch(`${GOOGLE_SCRIPT_URL}?action=get`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!Array.isArray(data)) {
+                        console.error("Өгөгдөл буруу байна:", data);
+                        return;
+                    }
+
+                    workLogs = data.map(log => ({
+                        ...log,
+                        works: parseArrayField(log.works, ','),
+                        brigade: parseArrayField(log.brigade, ';'),
+                        startDate: formatDateString(log.startDate),
+                        endDate: formatDateString(log.endDate)
+                    })).sort((a, b) => {
+                        const dateA = a.startDate || '';
+                        const timeA = a.startTime || '00:00';
+                        const dateB = b.startDate || '';
+                        const timeB = b.startTime || '00:00';
+
+                        const dtA = new Date(`${dateA}T${timeA}`).getTime() || 0;
+                        const dtB = new Date(`${dateB}T${timeB}`).getTime() || 0;
+                        return dtB - dtA;
+                    });
+                    
+                    updateFilterDropdowns();
+                    renderLogs();
+                })
+                .catch(err => {
+                    console.error("Дата татахад алдаа гарлаа:", err);
+                    if (container) {
+                        container.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Мэдээлэл татахад алдаа гарлаа.</div>`;
+                    }
+                });
+        }
 
         function setDefaultDates() {
             const today = new Date().toISOString().split('T')[0];
@@ -537,7 +619,7 @@
         function closeDropdownOutside(event) {
             const dropdown = document.getElementById('brigadeDropdownMenu');
             const btn = document.getElementById('brigadeDropdownBtn');
-            if (!dropdown.contains(event.target) && !btn.contains(event.target)) {
+            if (dropdown && btn && !dropdown.contains(event.target) && !btn.contains(event.target)) {
                 dropdown.classList.add('hidden');
             }
         }
@@ -588,16 +670,9 @@
 
             const staffSet = new Set();
             workLogs.forEach(l => {
-                let bList = [];
-                if (Array.isArray(l.brigade)) {
-                    bList = l.brigade;
-                } else if (typeof l.brigade === 'string' && l.brigade.trim() !== '') {
-                    bList = l.brigade.split(';');
-                }
+                const bList = Array.isArray(l.brigade) ? l.brigade : [];
                 bList.forEach(b => {
-                    if (b && typeof b === 'string') {
-                        staffSet.add(b.trim().split(' (')[0]);
-                    }
+                    if (b) staffSet.add(b.trim().split(' (')[0]);
                 });
             });
             const staffList = [...staffSet].filter(Boolean);
@@ -612,6 +687,12 @@
 
         function handleFormSubmit(event) {
             event.preventDefault();
+
+            if (!currentUser) {
+                alert("Эхлээд системд нэвтэрнэ үү!");
+                document.getElementById('loginModal').classList.remove('hidden');
+                return;
+            }
 
             const editIndex = document.getElementById('editIndex').value;
             const location = document.getElementById('location').value;
@@ -661,7 +742,8 @@
                 endTime,
                 totalMinutes,
                 works: selectedWorks,
-                brigade
+                brigade,
+                createdBy: editIndex === "" ? currentUser.name : (workLogs[editIndex].createdBy || currentUser.name)
             };
 
             if (editIndex === "") {
@@ -692,9 +774,10 @@
                 location: log.location,
                 orderNumber: log.orderNumber,
                 timeRange: dateDisplay,
-                works: log.works.join(', '),
-                brigade: log.brigade.join('; '),
-                totalHours: formatHoursAndMinutes(log.totalMinutes)
+                works: Array.isArray(log.works) ? log.works.join(', ') : log.works,
+                brigade: Array.isArray(log.brigade) ? log.brigade.join('; ') : log.brigade,
+                totalHours: formatHoursAndMinutes(log.totalMinutes),
+                createdBy: log.createdBy || (currentUser ? currentUser.name : '')
             });
 
             fetch(`${GOOGLE_SCRIPT_URL}?${params.toString()}`, {
@@ -720,13 +803,10 @@
         }
 
         function formatHoursAndMinutes(totalMins) {
-            if (totalMins < 0) return "0 цаг";
+            if (!totalMins || totalMins < 0) return "0 цаг";
             const hrs = Math.floor(totalMins / 60);
             const mins = totalMins % 60;
-            if (mins === 0) {
-                return `${hrs} цаг`;
-            }
-            return `${hrs} цаг ${mins} минут`;
+            return mins === 0 ? `${hrs} цаг` : `${hrs} цаг ${mins} минут`;
         }
 
         function changePage(direction) {
@@ -744,13 +824,16 @@
             const paginationContainer = document.getElementById('paginationContainer');
 
             const filtered = workLogs.filter(log => {
-                const matchesQuery = log.location.toLowerCase().includes(query) ||
-                                     log.orderNumber.toLowerCase().includes(query) ||
-                                     log.brigade.some(b => b.toLowerCase().includes(query)) ||
-                                     log.works.some(w => w.toLowerCase().includes(query));
+                const worksStr = Array.isArray(log.works) ? log.works.join(' ') : (log.works || '');
+                const brigadeStr = Array.isArray(log.brigade) ? log.brigade.join(' ') : (log.brigade || '');
+
+                const matchesQuery = (log.location || '').toLowerCase().includes(query) ||
+                                     (log.orderNumber || '').toString().toLowerCase().includes(query) ||
+                                     brigadeStr.toLowerCase().includes(query) ||
+                                     worksStr.toLowerCase().includes(query);
                 
                 const matchesLoc = filterLoc === "" || log.location === filterLoc;
-                const matchesStf = filterStf === "" || log.brigade.some(b => b.includes(filterStf));
+                const matchesStf = filterStf === "" || brigadeStr.includes(filterStf);
 
                 const logStart = log.startDate;
                 const logEnd = log.endDate || logStart;
@@ -794,67 +877,84 @@
             paginatedLogs.forEach((log) => {
                 const origIdx = workLogs.findIndex(item => item.id == log.id);
                 
-               // Огноо болон цагийг тусад нь задлах логик
-let dateOnly = log.startDate || '';
-let timeOnly = '';
+                let dateOnly = log.startDate || '';
+                let timeOnly = '';
 
-if (log.timeRange && log.timeRange.includes('(')) {
-    // Жишээ нь: "2026-03-09 (13:55 - 14:09)" -> огноо болон цагийг салгах
-    const parts = log.timeRange.split('(');
-    dateOnly = parts[0].trim();
-    timeOnly = parts[1].replace(')', '').trim();
-} else if (log.startTime && log.endTime) {
-    timeOnly = `${log.startTime} - ${log.endTime}`;
-} else if (log.startTime) {
-    timeOnly = log.startTime;
-}
+                if (log.timeRange && log.timeRange.includes('(')) {
+                    const parts = log.timeRange.split('(');
+                    dateOnly = parts[0].trim();
+                    timeOnly = parts[1].replace(')', '').trim();
+                } else if (log.startTime && log.endTime) {
+                    timeOnly = `${log.startTime} - ${log.endTime}`;
+                } else if (log.startTime) {
+                    timeOnly = log.startTime;
+                }
 
-const card = document.createElement('div');
-card.className = 'bg-slate-50 border border-slate-200 rounded-xl p-4 hover:border-indigo-300 transition space-y-2.5';
-card.innerHTML = `
-    <div class="flex flex-wrap items-center justify-between gap-2">
-        <!-- Огноо ба Цаг тусдаа Badge -->
-        <div class="flex items-center flex-wrap gap-1.5">
-            <span class="bg-indigo-600 text-white text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center space-x-1.5 shadow-sm">
-                <i class="fa-regular fa-calendar text-[11px]"></i>
-                <span>${dateOnly}</span>
-            </span>
-            ${timeOnly ? `
-            <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center space-x-1.5">
-                <i class="fa-regular fa-clock text-[11px] text-indigo-500"></i>
-                <span>${timeOnly}</span>
-            </span>` : ''}
-        </div>
+                const worksArr = Array.isArray(log.works) ? log.works : [];
+                const brigadeArr = Array.isArray(log.brigade) ? log.brigade : [];
 
-        <!-- Тод ялгарсан үйлдлийн товчлуурууд -->
-        <div class="flex items-center space-x-1.5">
-            <button onclick="editLog(${origIdx})" class="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200/80 transition flex items-center justify-center shadow-xs" title="Засах">
-                <i class="fa-solid fa-pen-to-square text-xs"></i>
-            </button>
-            <button onclick="deleteLog(${origIdx})" class="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 transition flex items-center justify-center shadow-xs" title="Устгах">
-                <i class="fa-solid fa-trash-can text-xs"></i>
-            </button>
-        </div>
-    </div>
-    <div>
-        <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
-            <i class="fa-solid fa-location-dot text-indigo-500 text-xs"></i>
-            <span>${log.location}</span>
-            <span class="text-xs font-normal text-slate-500">(Няряд: ${log.orderNumber})</span>
-        </h3>
-        <p class="text-xs text-indigo-700 font-medium mt-1">✓ ${log.works.join(', ')}</p>
-    </div>
-    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-2 border-t border-slate-200 text-xs text-slate-500 gap-1">
-        <span class="flex items-start space-x-1">
-            <i class="fa-solid fa-users text-indigo-400 text-xs mt-0.5"></i>
-            <span><strong class="font-bold text-slate-800">Бригад:</strong> <span class="text-slate-600">${log.brigade.join('; ')}</span></span>
-        </span>
-        <span class="text-indigo-600 font-bold whitespace-nowrap flex items-center space-x-1">
-            <i class="fa-solid fa-hourglass-half text-[10px]"></i>
-            <span>Нийт: ${formatHoursAndMinutes(log.totalMinutes)}</span>
-        </span>
-    </div>
-`;
+                // ЭРХИЙН ХЯЗГААРЛАЛТ: Админ эсвэл өөрөө оруулсан бол товчнууд харагдана
+                const isOwner = currentUser && (log.createdBy === currentUser.name);
+                const isAdmin = currentUser && (currentUser.role === 'admin');
+                const canManage = isOwner || isAdmin;
+
+                const actionButtonsHtml = canManage ? `
+                    <div class="flex items-center space-x-1.5">
+                        <button onclick="editLog(${origIdx})" class="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200/80 transition flex items-center justify-center shadow-xs" title="Засах">
+                            <i class="fa-solid fa-pen-to-square text-xs"></i>
+                        </button>
+                        <button onclick="deleteLog(${origIdx})" class="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 transition flex items-center justify-center shadow-xs" title="Устгах">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                ` : `
+                    <span class="text-[11px] text-slate-400 bg-slate-100 border border-slate-200 px-2 py-1 rounded-md" title="Энэ тэмдэглэлийг ${log.createdBy || 'өөр хүн'} бүртгэсэн">
+                        <i class="fa-solid fa-eye mr-1 text-[10px]"></i>Зөвхөн харах
+                    </span>
+                `;
+
+                const card = document.createElement('div');
+                card.className = 'bg-slate-50 border border-slate-200 rounded-xl p-4 hover:border-indigo-300 transition space-y-2.5';
+                card.innerHTML = `
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div class="flex items-center flex-wrap gap-1.5">
+                            <span class="bg-indigo-600 text-white text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center space-x-1.5 shadow-sm">
+                                <i class="fa-regular fa-calendar text-[11px]"></i>
+                                <span>${dateOnly}</span>
+                            </span>
+                            ${timeOnly ? `
+                            <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center space-x-1.5">
+                                <i class="fa-regular fa-clock text-[11px] text-indigo-500"></i>
+                                <span>${timeOnly}</span>
+                            </span>` : ''}
+                        </div>
+
+                        ${actionButtonsHtml}
+                    </div>
+
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+                            <i class="fa-solid fa-location-dot text-indigo-500 text-xs"></i>
+                            <span>${log.location}</span>
+                            <span class="text-xs font-normal text-slate-500">(Няряд: ${log.orderNumber})</span>
+                        </h3>
+                        <p class="text-xs text-indigo-700 font-medium mt-1">✓ ${worksArr.join(', ')}</p>
+                    </div>
+
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-2 border-t border-slate-200 text-xs text-slate-500 gap-1">
+                        <span class="flex items-start space-x-1">
+                            <i class="fa-solid fa-users text-indigo-400 text-xs mt-0.5"></i>
+                            <span><strong class="font-bold text-slate-800">Бригад:</strong> <span class="text-slate-600">${brigadeArr.join('; ')}</span></span>
+                        </span>
+                        <div class="flex items-center space-x-3">
+                            ${log.createdBy ? `<span class="text-[10px] text-slate-400">Бүртгэсэн: <strong class="text-slate-600">${log.createdBy}</strong></span>` : ''}
+                            <span class="text-indigo-600 font-bold whitespace-nowrap flex items-center space-x-1">
+                                <i class="fa-solid fa-hourglass-half text-[10px]"></i>
+                                <span>Нийт: ${formatHoursAndMinutes(log.totalMinutes)}</span>
+                            </span>
+                        </div>
+                    </div>
+                `;
                 container.appendChild(card);
             });
 
@@ -870,20 +970,29 @@ card.innerHTML = `
 
         function editLog(index) {
             const log = workLogs[index];
+
+            const isOwner = currentUser && (log.createdBy === currentUser.name);
+            const isAdmin = currentUser && (currentUser.role === 'admin');
+            if (!isOwner && !isAdmin) {
+                alert("Та зөвхөн өөрийн бүртгэсэн тэмдэглэлийг засах эрхтэй!");
+                return;
+            }
+
             document.getElementById('editIndex').value = index;
-            document.getElementById('location').value = log.location;
-            document.getElementById('orderNumber').value = log.orderNumber;
-            document.getElementById('startDate').value = log.startDate;
-            document.getElementById('startTime').value = "09:00";
-            document.getElementById('endDate').value = log.endDate || log.startDate;
-            document.getElementById('endTime').value = "18:00";
+            document.getElementById('location').value = log.location || '';
+            document.getElementById('orderNumber').value = log.orderNumber || '';
+            document.getElementById('startDate').value = log.startDate || '';
+            document.getElementById('startTime').value = log.startTime || "09:00";
+            document.getElementById('endDate').value = log.endDate || log.startDate || '';
+            document.getElementById('endTime').value = log.endTime || "18:00";
             
+            const works = Array.isArray(log.works) ? log.works : [];
             const checkboxes = document.querySelectorAll('input[name="workType"]');
             checkboxes.forEach(cb => {
-                cb.checked = log.works.includes(cb.value);
+                cb.checked = works.includes(cb.value);
             });
 
-            const otherWorkItem = log.works.find(w => w.startsWith("Бусад: "));
+            const otherWorkItem = works.find(w => w.startsWith("Бусад: "));
             if (otherWorkItem) {
                 document.getElementById('otherWorkCheckbox').checked = true;
                 const textInput = document.getElementById('otherWorkText');
@@ -904,9 +1013,17 @@ card.innerHTML = `
         }
 
         function deleteLog(index) {
+            const log = workLogs[index];
+
+            const isOwner = currentUser && (log.createdBy === currentUser.name);
+            const isAdmin = currentUser && (currentUser.role === 'admin');
+            if (!isOwner && !isAdmin) {
+                alert("Та зөвхөн өөрийн бүртгэсэн тэмдэглэлийг устгах эрхтэй!");
+                return;
+            }
+
             if (confirm("Энэ тэмдэглэлийг устгахдаа итгэлтэй байна уу?")) {
-                const logToDelete = workLogs[index];
-                sendToGoogleSheets('delete', logToDelete, () => {
+                sendToGoogleSheets('delete', log, () => {
                     fetchLogsFromSheet();
                 });
             }
@@ -924,93 +1041,94 @@ card.innerHTML = `
         }
 
         function openGlobalReportModal() {
-    document.getElementById('reportModal').classList.remove('hidden');
-    document.getElementById('repTotalLogs').innerText = workLogs.length;
-    const sumMins = workLogs.reduce((sum, item) => sum + (item.totalMinutes || 0), 0);
-    document.getElementById('repTotalHours').innerText = formatHoursAndMinutes(sumMins);
+            document.getElementById('reportModal').classList.remove('hidden');
+            document.getElementById('repTotalLogs').innerText = workLogs.length;
+            const sumMins = workLogs.reduce((sum, item) => sum + (item.totalMinutes || 0), 0);
+            document.getElementById('repTotalHours').innerText = formatHoursAndMinutes(sumMins);
 
-    const staffSet = new Set();
-    workLogs.forEach(l => l.brigade.forEach(s => staffSet.add(s.split(' (')[0])));
-    document.getElementById('repTotalStaff').innerText = staffSet.size;
+            const staffSet = new Set();
+            workLogs.forEach(l => {
+                const bArr = Array.isArray(l.brigade) ? l.brigade : [];
+                bArr.forEach(s => staffSet.add(s.trim().split(' (')[0]));
+            });
+            document.getElementById('repTotalStaff').innerText = staffSet.size;
 
-    const tbody = document.getElementById('reportTableBody');
-    tbody.innerHTML = '';
+            const tbody = document.getElementById('reportTableBody');
+            tbody.innerHTML = '';
 
-    if (workLogs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Бүртгэгдсэн мэдээлэл олдсонгүй</td></tr>`;
-        return;
-    }
+            if (workLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Бүртгэгдсэн мэдээлэл олдсонгүй</td></tr>`;
+                return;
+            }
 
-    workLogs.forEach((log, idx) => {
-        // Огноо ба цагийг тусад нь цэвэрхэн салгах
-        let datePart = log.startDate || '';
-        let timePart = '';
-        if (log.timeRange && log.timeRange.includes('(')) {
-            const parts = log.timeRange.split('(');
-            datePart = parts[0].trim();
-            timePart = parts[1].replace(')', '').trim();
-        } else if (log.startTime && log.endTime) {
-            timePart = `${log.startTime} - ${log.endTime}`;
+            workLogs.forEach((log, idx) => {
+                let datePart = log.startDate || '';
+                let timePart = '';
+                if (log.timeRange && log.timeRange.includes('(')) {
+                    const parts = log.timeRange.split('(');
+                    datePart = parts[0].trim();
+                    timePart = parts[1].replace(')', '').trim();
+                } else if (log.startTime && log.endTime) {
+                    timePart = `${log.startTime} - ${log.endTime}`;
+                }
+
+                const worksText = Array.isArray(log.works) ? log.works.join(' ') : (log.works || '');
+                const bArr = Array.isArray(log.brigade) ? log.brigade : [];
+
+                const brigadeHtml = bArr.map(person => {
+                    const clean = person.trim();
+                    const pName = clean.split(' (')[0];
+                    const pRole = clean.includes('(') ? clean.split('(')[1].replace(')', '') : '';
+                    return `
+                        <div class="py-1 border-b border-slate-100 last:border-0">
+                            <span class="font-semibold text-slate-800">${pName}</span>
+                            ${pRole ? `<span class="block text-[11px] text-slate-500 leading-tight">${pRole}</span>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50/80 transition border-b border-slate-200';
+                tr.innerHTML = `
+                    <td class="p-3 text-center font-medium text-slate-500 align-top">${idx + 1}</td>
+                    <td class="p-3 align-top">
+                        <div class="font-bold text-slate-900">${log.location}</div>
+                    </td>
+                    <td class="p-3 text-center align-top">
+                        <span class="inline-block bg-slate-100 text-slate-700 font-semibold px-2 py-0.5 rounded text-[11px] border border-slate-200">
+                            №${log.orderNumber}
+                        </span>
+                    </td>
+                    <td class="p-3 align-top whitespace-nowrap">
+                        <div class="font-semibold text-slate-800">${datePart}</div>
+                        ${timePart ? `<div class="text-[11px] text-indigo-600 font-medium mt-0.5"><i class="fa-regular fa-clock mr-1 text-[10px]"></i>${timePart}</div>` : ''}
+                    </td>
+                    <td class="p-3 align-top min-w-[220px]">
+                        <div class="text-slate-800 leading-relaxed font-normal text-xs">
+                            ${worksText}
+                        </div>
+                    </td>
+                    <td class="p-3 align-top min-w-[200px]">
+                        <div class="space-y-0.5">${brigadeHtml}</div>
+                    </td>
+                    <td class="p-3 text-right align-top whitespace-nowrap">
+                        <span class="font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-md text-xs">
+                            ${formatHoursAndMinutes(log.totalMinutes)}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            const totalRow = document.createElement('tr');
+            totalRow.className = 'bg-slate-100/80 font-bold border-t-2 border-slate-300';
+            totalRow.innerHTML = `
+                <td colspan="6" class="p-3 text-right text-slate-800 uppercase text-[11px] tracking-wider">Нийт ажилласан хугацаа:</td>
+                <td class="p-3 text-right text-indigo-700 text-sm whitespace-nowrap">${formatHoursAndMinutes(sumMins)}</td>
+            `;
+            tbody.appendChild(totalRow);
         }
 
-        // Хийгдсэн ажлыг цэгцтэй жагсаалт болгох
-        // ШИНЭЧИЛСЭН: Цэгтэй жагсаалтгүй, хооронд нь зайтай холбох
-const worksText = Array.isArray(log.works) ? log.works.join(' ') : log.works;
-
-        // Бригадын гишүүдийн нэрийг тодруулж, албан тушаалыг доор нь цэвэрхэн харуулах
-        const brigadeHtml = log.brigade.map(person => {
-            const pName = person.split(' (')[0];
-            const pRole = person.includes('(') ? person.split('(')[1].replace(')', '') : '';
-            return `
-                <div class="py-1 border-b border-slate-100 last:border-0">
-                    <span class="font-semibold text-slate-800">${pName}</span>
-                    ${pRole ? `<span class="block text-[11px] text-slate-500 leading-tight">${pRole}</span>` : ''}
-                </div>
-            `;
-        }).join('');
-
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50/80 transition border-b border-slate-200';
-        tr.innerHTML = `
-            <td class="p-3 text-center font-medium text-slate-500 align-top">${idx + 1}</td>
-            <td class="p-3 align-top">
-                <div class="font-bold text-slate-900">${log.location}</div>
-            </td>
-            <td class="p-3 text-center align-top">
-                <span class="inline-block bg-slate-100 text-slate-700 font-semibold px-2 py-0.5 rounded text-[11px] border border-slate-200">
-                    №${log.orderNumber}
-                </span>
-            </td>
-            <td class="p-3 align-top whitespace-nowrap">
-                <div class="font-semibold text-slate-800">${datePart}</div>
-                ${timePart ? `<div class="text-[11px] text-indigo-600 font-medium mt-0.5"><i class="fa-regular fa-clock mr-1 text-[10px]"></i>${timePart}</div>` : ''}
-            </td>
-            <td class="p-3 align-top min-w-[220px]">
-    <div class="text-slate-800 leading-relaxed font-normal text-xs">
-        ${worksText}
-    </div>
-</td>
-            <td class="p-3 align-top min-w-[200px]">
-                <div class="space-y-0.5">${brigadeHtml}</div>
-            </td>
-            <td class="p-3 text-right align-top whitespace-nowrap">
-                <span class="font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-md text-xs">
-                    ${formatHoursAndMinutes(log.totalMinutes)}
-                </span>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-
-    // Хүснэгтийн төгсгөлд "НИЙТ ДҮН" мөр автоматаар нэмэх
-    const totalRow = document.createElement('tr');
-    totalRow.className = 'bg-slate-100/80 font-bold border-t-2 border-slate-300';
-    totalRow.innerHTML = `
-        <td colspan="6" class="p-3 text-right text-slate-800 uppercase text-[11px] tracking-wider">Нийт ажилласан хугацаа:</td>
-        <td class="p-3 text-right text-indigo-700 text-sm whitespace-nowrap">${formatHoursAndMinutes(sumMins)}</td>
-    `;
-    tbody.appendChild(totalRow);
-}
         function closeGlobalReportModal() {
             document.getElementById('reportModal').classList.add('hidden');
         }
