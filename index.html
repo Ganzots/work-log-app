@@ -12,10 +12,41 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         @media print {
-            body * { visibility: hidden; }
-            #reportModalContent, #reportModalContent * { visibility: visible; }
-            #reportModalContent { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; box-shadow: none !important; background: white !important; }
-            .no-print { display: none !important; }
+            body * {
+                visibility: hidden;
+            }
+            #reportModal, #reportModal * {
+                visibility: visible;
+            }
+            #reportModal {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                background: white !important;
+            }
+            #reportModalContent {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 10px;
+                box-shadow: none !important;
+                background: white !important;
+                overflow: visible !important;
+                max-height: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            tr {
+                page-break-inside: avoid;
+            }
+            table {
+                page-break-after: auto;
+            }
         }
     </style>
 </head>
