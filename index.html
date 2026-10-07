@@ -24,10 +24,10 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between antialiased" onclick="closeDropdownOutside(event)">
 
-    <!-- LOGIN MODAL (Сайжруулсан загвар) -->
+   <!-- LOGIN MODAL -->
     <div id="loginModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300">
         <div class="relative bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-[420px] p-7 sm:p-9 overflow-hidden">
-            <!-- Дээд талын гоёлын градиент зураас -->
+            <!-- Дээд талын гоёлын зураас -->
             <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500"></div>
 
             <div class="text-center space-y-3 mb-7">
@@ -35,8 +35,7 @@
                     <i class="fa-solid fa-shield-halved text-2xl"></i>
                 </div>
                 <div>
-                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">NDC TechLog</h2>
-                    <p class="text-[11px] font-medium text-slate-500 mt-1 uppercase tracking-wider">Төв диспетчерийн алба • ТХХэсэг</p>
+                    <h2 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight leading-snug">Ажил гүйцэтгэлийн бүртгэлийн систем</h2>
                 </div>
             </div>
 
@@ -89,7 +88,6 @@
             </div>
         </div>
     </div>
-
     <!-- MAIN APP CONTAINER -->
     <div>
         <!-- Header -->
@@ -489,7 +487,7 @@
     <script>
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDqxUsI07eMWhF4FSqKJ2Fr_g5GHr02ibzPi-SsyqSWn9eo7QQ4Ldf_g8xtplURNAy/exec";
 
-        // ХЭРЭГЛЭГЧДИЙН ЖАГСААЛТ БА ЭРХ
+// ХЭРЭГЛЭГЧДИЙН ЖАГСААЛТ БА ЭРХ
         const USERS = [
             { username: "ganzorig", name: "Ц.Ганзориг", pass: "1234", role: "admin" }, // Админ эрхтэй
             { username: "enkhbayasgalan", name: "М.Энхбаясгалан", pass: "1234", role: "user" },
@@ -521,14 +519,27 @@
         const itemsPerPage = 4;
 
         window.onload = function() {
-            checkAuth();
-            populateLoginUserSelect();
+            populateLoginUserSelect(); // 1. Эхлээд хэрэглэгчийн жагсаалтаа сонгох талбарт дүүргэнэ
+            checkAuth();               // 2. Өмнө нь нэвтэрсэн эсэхийг шалгана
             populateBrigadeDropdown();
             setDefaultDates();
             fetchLogsFromSheet();
         };
 
         // --- AUTH LOGIC ---
+        function checkAuth() {
+            const saved = sessionStorage.getItem('currentUser');
+            const modal = document.getElementById('loginModal');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                if (modal) modal.classList.add('hidden');
+                const headerName = document.getElementById('headerUserName');
+                if (headerName) headerName.innerText = currentUser.name + (currentUser.role === 'admin' ? ' (Админ)' : '');
+            } else {
+                if (modal) modal.classList.remove('hidden');
+            }
+        }
+
         function togglePasswordVisibility() {
             const passInput = document.getElementById('loginPassword');
             const icon = document.getElementById('togglePasswordIcon');
@@ -542,8 +553,10 @@
                 icon.classList.add('fa-eye');
             }
         }
+
         function populateLoginUserSelect() {
             const select = document.getElementById('loginUserSelect');
+            if (!select) return;
             select.innerHTML = '<option value="">Нэрээ сонгоно уу...</option>' + 
                 USERS.map(u => `<option value="${u.username}">${u.name} ${u.role === 'admin' ? '(Админ)' : ''}</option>`).join('');
         }
@@ -559,11 +572,12 @@
                 currentUser = found;
                 sessionStorage.setItem('currentUser', JSON.stringify(found));
                 document.getElementById('loginModal').classList.add('hidden');
-                document.getElementById('headerUserName').innerText = currentUser.name + (currentUser.role === 'admin' ? ' (Админ)' : '');
-                errorMsg.classList.add('hidden');
+                const headerName = document.getElementById('headerUserName');
+                if (headerName) headerName.innerText = currentUser.name + (currentUser.role === 'admin' ? ' (Админ)' : '');
+                if (errorMsg) errorMsg.classList.add('hidden');
                 renderLogs();
             } else {
-                errorMsg.classList.remove('hidden');
+                if (errorMsg) errorMsg.classList.remove('hidden');
             }
         }
 
@@ -571,8 +585,11 @@
             if (confirm("Системээс гарахдаа итгэлтэй байна уу?")) {
                 sessionStorage.removeItem('currentUser');
                 currentUser = null;
-                document.getElementById('loginPassword').value = '';
-                document.getElementById('loginModal').classList.remove('hidden');
+                const passInput = document.getElementById('loginPassword');
+                if (passInput) passInput.value = '';
+                const modal = document.getElementById('loginModal');
+                if (modal) modal.classList.remove('hidden');
+                populateLoginUserSelect();
                 renderLogs();
             }
         }
