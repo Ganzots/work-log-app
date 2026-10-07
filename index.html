@@ -382,17 +382,17 @@
                 <div>
                     <div class="overflow-x-auto border border-slate-200 rounded-xl">
                         <table class="w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200">
-                                    <th class="p-2.5">№</th>
-                                    <th class="p-2.5">Байршил</th>
-                                    <th class="p-2.5">Няряд №</th>
-                                    <th class="p-2.5">Ажилласан хугацаа (Огноо, цаг)</th>
-                                    <th class="p-2.5">Хийгдсэн ажил</th>
-                                    <th class="p-2.5">Бригадын бүрэлдэхүүн</th>
-                                    <th class="p-2.5">Нийт цаг</th>
-                                </tr>
-                            </thead>
+                           <thead>
+    <tr class="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200 text-[11px]">
+        <th class="p-3 text-center w-10">№</th>
+        <th class="p-3 w-40">Байршил</th>
+        <th class="p-3 text-center w-24">Няряд №</th>
+        <th class="p-3 w-36">Ажилласан хугацаа</th>
+        <th class="p-3">Хийгдсэн ажил</th>
+        <th class="p-3">Бригадын бүрэлдэхүүн</th>
+        <th class="p-3 text-right w-28">Нийт цаг</th>
+    </tr>
+</thead>
                             <tbody id="reportTableBody" class="divide-y divide-slate-200">
                                 <!-- Dynamic rows -->
                             </tbody>
@@ -881,38 +881,95 @@ card.innerHTML = `
         }
 
         function openGlobalReportModal() {
-            document.getElementById('reportModal').classList.remove('hidden');
-            document.getElementById('repTotalLogs').innerText = workLogs.length;
-            const sumMins = workLogs.reduce((sum, item) => sum + (item.totalMinutes || 0), 0);
-            document.getElementById('repTotalHours').innerText = formatHoursAndMinutes(sumMins);
+    document.getElementById('reportModal').classList.remove('hidden');
+    document.getElementById('repTotalLogs').innerText = workLogs.length;
+    const sumMins = workLogs.reduce((sum, item) => sum + (item.totalMinutes || 0), 0);
+    document.getElementById('repTotalHours').innerText = formatHoursAndMinutes(sumMins);
 
-            const staffSet = new Set();
-            workLogs.forEach(l => l.brigade.forEach(s => staffSet.add(s)));
-            document.getElementById('repTotalStaff').innerText = staffSet.size;
+    const staffSet = new Set();
+    workLogs.forEach(l => l.brigade.forEach(s => staffSet.add(s.split(' (')[0])));
+    document.getElementById('repTotalStaff').innerText = staffSet.size;
 
-            const tbody = document.getElementById('reportTableBody');
-            tbody.innerHTML = '';
+    const tbody = document.getElementById('reportTableBody');
+    tbody.innerHTML = '';
 
-            if (workLogs.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Мэдээлэл байхгүй байна</td></tr>`;
-            } else {
-                workLogs.forEach((log, idx) => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-50 transition';
-                    tr.innerHTML = `
-                        <td class="p-2.5 font-medium text-slate-900">${idx + 1}</td>
-                        <td class="p-2.5 font-medium text-slate-900">${log.location}</td>
-                        <td class="p-2.5 text-slate-700">${log.orderNumber}</td>
-                        <td class="p-2.5 text-slate-600">${log.timeRange || log.startDate}</td>
-                        <td class="p-2.5 text-slate-700">${log.works.join(', ')}</td>
-                        <td class="p-2.5 text-slate-600">${log.brigade.join('; ')}</td>
-                        <td class="p-2.5 font-bold text-indigo-600">${formatHoursAndMinutes(log.totalMinutes)}</td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
+    if (workLogs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Бүртгэгдсэн мэдээлэл олдсонгүй</td></tr>`;
+        return;
+    }
+
+    workLogs.forEach((log, idx) => {
+        // Огноо ба цагийг тусад нь цэвэрхэн салгах
+        let datePart = log.startDate || '';
+        let timePart = '';
+        if (log.timeRange && log.timeRange.includes('(')) {
+            const parts = log.timeRange.split('(');
+            datePart = parts[0].trim();
+            timePart = parts[1].replace(')', '').trim();
+        } else if (log.startTime && log.endTime) {
+            timePart = `${log.startTime} - ${log.endTime}`;
         }
 
+        // Хийгдсэн ажлыг цэгцтэй жагсаалт болгох
+        const worksHtml = log.works.map(w => `
+            <div class="flex items-start space-x-1.5 py-0.5">
+                <span class="text-indigo-600 font-bold text-xs leading-none">•</span>
+                <span class="text-slate-700 leading-relaxed">${w}</span>
+            </div>
+        `).join('');
+
+        // Бригадын гишүүдийн нэрийг тодруулж, албан тушаалыг доор нь цэвэрхэн харуулах
+        const brigadeHtml = log.brigade.map(person => {
+            const pName = person.split(' (')[0];
+            const pRole = person.includes('(') ? person.split('(')[1].replace(')', '') : '';
+            return `
+                <div class="py-1 border-b border-slate-100 last:border-0">
+                    <span class="font-semibold text-slate-800">${pName}</span>
+                    ${pRole ? `<span class="block text-[11px] text-slate-500 leading-tight">${pRole}</span>` : ''}
+                </div>
+            `;
+        }).join('');
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition border-b border-slate-200';
+        tr.innerHTML = `
+            <td class="p-3 text-center font-medium text-slate-500 align-top">${idx + 1}</td>
+            <td class="p-3 align-top">
+                <div class="font-bold text-slate-900">${log.location}</div>
+            </td>
+            <td class="p-3 text-center align-top">
+                <span class="inline-block bg-slate-100 text-slate-700 font-semibold px-2 py-0.5 rounded text-[11px] border border-slate-200">
+                    №${log.orderNumber}
+                </span>
+            </td>
+            <td class="p-3 align-top whitespace-nowrap">
+                <div class="font-semibold text-slate-800">${datePart}</div>
+                ${timePart ? `<div class="text-[11px] text-indigo-600 font-medium mt-0.5"><i class="fa-regular fa-clock mr-1 text-[10px]"></i>${timePart}</div>` : ''}
+            </td>
+            <td class="p-3 align-top min-w-[220px]">
+                <div class="space-y-0.5">${worksHtml}</div>
+            </td>
+            <td class="p-3 align-top min-w-[200px]">
+                <div class="space-y-0.5">${brigadeHtml}</div>
+            </td>
+            <td class="p-3 text-right align-top whitespace-nowrap">
+                <span class="font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-md text-xs">
+                    ${formatHoursAndMinutes(log.totalMinutes)}
+                </span>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    // Хүснэгтийн төгсгөлд "НИЙТ ДҮН" мөр автоматаар нэмэх
+    const totalRow = document.createElement('tr');
+    totalRow.className = 'bg-slate-100/80 font-bold border-t-2 border-slate-300';
+    totalRow.innerHTML = `
+        <td colspan="6" class="p-3 text-right text-slate-800 uppercase text-[11px] tracking-wider">Нийт ажилласан хугацаа:</td>
+        <td class="p-3 text-right text-indigo-700 text-sm whitespace-nowrap">${formatHoursAndMinutes(sumMins)}</td>
+    `;
+    tbody.appendChild(totalRow);
+}
         function closeGlobalReportModal() {
             document.getElementById('reportModal').classList.add('hidden');
         }
