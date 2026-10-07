@@ -395,6 +395,8 @@
 
     <!-- JavaScript Logic -->
     <script>
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEh7SJQ_kVkp4s076GKZb3i9AvShZI6oWXU8vKjVBLG4vdMzg0d5algemm-MNUOF7g/exec";
+
         const brigadeStaffList = [
             { name: "Ц.Ганзориг", role: "Тоолуурын нэгдсэн системийн инженер" },
             { name: "М.Энхбаясгалан", role: "Электроникийн инженер" },
@@ -407,7 +409,7 @@
             { name: "Д.Нацагдорж", role: "Технологийн холбооны хэсгийн ахлах инженер" }
         ];
 
-        const STORAGE_KEY = 'work_logs_txy_v15';
+        const STORAGE_KEY = 'work_logs_txy_v16';
         let workLogs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         window.onload = function() {
@@ -551,12 +553,43 @@
 
             if (editIndex === "") {
                 workLogs.unshift(logData);
+                // Send to Google Sheets only for new entries
+                sendToGoogleSheets(logData);
             } else {
                 workLogs[parseInt(editIndex)] = logData;
             }
 
             saveAndRefresh();
             resetForm();
+        }
+
+        function sendToGoogleSheets(log) {
+            const dateDisplay = log.startDate === log.endDate 
+                ? `${log.startDate} (${log.startTime} - ${log.endTime})`
+                : `${log.startDate} ${log.startTime} - ${log.endDate} ${log.endTime}`;
+
+            const payload = {
+                date: log.startDate,
+                location: log.location,
+                orderNumber: log.orderNumber,
+                timeRange: dateDisplay,
+                works: log.works.join(', '),
+                brigade: log.brigade.join('; '),
+                totalHours: formatHoursAndMinutes(log.totalMinutes)
+            };
+
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload)
+            }).then(() => {
+                console.log("Google Sheets рүү амжилттай илгээгдлээ.");
+            }).catch(err => {
+                console.error("Google Sheets рүү илгээхэд алдаа гарлаа:", err);
+            });
         }
 
         function calculateTotalMinutes(d1, t1, d2, t2) {
@@ -603,7 +636,6 @@
                 const matchesLoc = filterLoc === "" || log.location === filterLoc;
                 const matchesStf = filterStf === "" || log.brigade.some(b => b.includes(filterStf));
 
-                // Date interval filter check
                 const logStart = log.startDate || log.workDate;
                 const logEnd = log.endDate || logStart;
 
