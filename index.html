@@ -911,12 +911,8 @@ card.innerHTML = `
         }
 
         // Хийгдсэн ажлыг цэгцтэй жагсаалт болгох
-        const worksHtml = log.works.map(w => `
-            <div class="flex items-start space-x-1.5 py-0.5">
-                <span class="text-indigo-600 font-bold text-xs leading-none">•</span>
-                <span class="text-slate-700 leading-relaxed">${w}</span>
-            </div>
-        `).join('');
+        // ШИНЭЧИЛСЭН: Цэгтэй жагсаалтгүй, хооронд нь зайтай холбох
+const worksText = Array.isArray(log.works) ? log.works.join(' ') : log.works;
 
         // Бригадын гишүүдийн нэрийг тодруулж, албан тушаалыг доор нь цэвэрхэн харуулах
         const brigadeHtml = log.brigade.map(person => {
@@ -947,8 +943,10 @@ card.innerHTML = `
                 ${timePart ? `<div class="text-[11px] text-indigo-600 font-medium mt-0.5"><i class="fa-regular fa-clock mr-1 text-[10px]"></i>${timePart}</div>` : ''}
             </td>
             <td class="p-3 align-top min-w-[220px]">
-                <div class="space-y-0.5">${worksHtml}</div>
-            </td>
+    <div class="text-slate-800 leading-relaxed font-normal text-xs">
+        ${worksText}
+    </div>
+</td>
             <td class="p-3 align-top min-w-[200px]">
                 <div class="space-y-0.5">${brigadeHtml}</div>
             </td>
