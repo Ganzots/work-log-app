@@ -409,7 +409,7 @@
             { name: "Д.Нацагдорж", role: "Технологийн холбооны хэсгийн ахлах инженер" }
         ];
 
-        const STORAGE_KEY = 'work_logs_txy_v16';
+        const STORAGE_KEY = 'work_logs_txy_v17';
         let workLogs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
         window.onload = function() {
@@ -553,22 +553,24 @@
 
             if (editIndex === "") {
                 workLogs.unshift(logData);
-                // Send to Google Sheets only for new entries
-                sendToGoogleSheets(logData);
+                sendToGoogleSheets('add', logData);
             } else {
                 workLogs[parseInt(editIndex)] = logData;
+                sendToGoogleSheets('update', logData);
             }
 
             saveAndRefresh();
             resetForm();
         }
 
-        function sendToGoogleSheets(log) {
+        function sendToGoogleSheets(action, log) {
             const dateDisplay = log.startDate === log.endDate 
                 ? `${log.startDate} (${log.startTime} - ${log.endTime})`
                 : `${log.startDate} ${log.startTime} - ${log.endDate} ${log.endTime}`;
 
             const payload = {
+                action: action, // 'add', 'update', or 'delete'
+                id: log.id,
                 date: log.startDate,
                 location: log.location,
                 orderNumber: log.orderNumber,
@@ -586,9 +588,9 @@
                 },
                 body: JSON.stringify(payload)
             }).then(() => {
-                console.log("Google Sheets рүү амжилттай илгээгдлээ.");
+                console.log(`Google Sheets үйлдэл амжилттай (${action})`);
             }).catch(err => {
-                console.error("Google Sheets рүү илгээхэд алдаа гарлаа:", err);
+                console.error("Google Sheets хүсэлт алдаа гарлаа:", err);
             });
         }
 
@@ -741,7 +743,9 @@
 
         function deleteLog(index) {
             if (confirm("Энэ тэмдэглэлийг устгахдаа итгэлтэй байна уу?")) {
+                const logToDelete = workLogs[index];
                 workLogs.splice(index, 1);
+                sendToGoogleSheets('delete', logToDelete);
                 saveAndRefresh();
             }
         }
