@@ -73,7 +73,7 @@
                 </div>
                 <div class="flex items-center space-x-2 sm:space-x-3">
     <!-- 1. Шинэчлэх товч -->
-    <button onclick="reverse()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center space-x-1.5" title="Дата шинэчлэх">
+    <button onclick="fetchLogsFromSheet()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center space-x-1.5" title="Дата шинэчлэх">
         <i class="fa-solid fa-rotate"></i>
         <span class="hidden sm:inline">Шинэчлэх</span>
     </button>
@@ -577,16 +577,30 @@
             const locSelect = document.getElementById('filterLocation');
             const staffSelect = document.getElementById('filterStaff');
 
+            if (!locSelect || !staffSelect) return;
+
             const currentLoc = locSelect.value;
             const currentStaff = staffSelect.value;
 
-            const locations = [...new Set(workLogs.map(l => l.location))];
+            const locations = [...new Set(workLogs.map(l => l.location).filter(Boolean))];
             locSelect.innerHTML = `<option value="">Бүх байршил</option>` + locations.map(loc => `<option value="${loc}">${loc}</option>`).join('');
             locSelect.value = currentLoc;
 
             const staffSet = new Set();
-            workLogs.forEach(l => l.brigade.forEach(b => staffSet.add(b.split(' (')[0])));
-            const staffList = [...staffSet];
+            workLogs.forEach(l => {
+                let bList = [];
+                if (Array.isArray(l.brigade)) {
+                    bList = l.brigade;
+                } else if (typeof l.brigade === 'string' && l.brigade.trim() !== '') {
+                    bList = l.brigade.split(';');
+                }
+                bList.forEach(b => {
+                    if (b && typeof b === 'string') {
+                        staffSet.add(b.trim().split(' (')[0]);
+                    }
+                });
+            });
+            const staffList = [...staffSet].filter(Boolean);
             staffSelect.innerHTML = `<option value="">Бүх ажилтнууд</option>` + staffList.map(st => `<option value="${st}">${st}</option>`).join('');
             staffSelect.value = currentStaff;
         }
