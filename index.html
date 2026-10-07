@@ -12,25 +12,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            #reportModalContent, #reportModalContent * {
-                visibility: visible;
-            }
-            #reportModalContent {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                margin: 0;
-                padding: 20px;
-                box-shadow: none !important;
-                background: white !important;
-            }
-            .no-print {
-                display: none !important;
-            }
+            body * { visibility: hidden; }
+            #reportModalContent, #reportModalContent * { visibility: visible; }
+            #reportModalContent { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; box-shadow: none !important; background: white !important; }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
@@ -55,7 +40,11 @@
                         </p>
                     </div>
                 </div>
-                <div>
+                <div class="flex items-center space-x-3">
+                    <button onclick="fetchLogsFromSheet()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center space-x-1.5" title="Дата шинэчлэх">
+                        <i class="fa-solid fa-rotate"></i>
+                        <span class="hidden sm:inline">Шинэчлэх</span>
+                    </button>
                     <button onclick="openGlobalReportModal()" class="inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm shadow-indigo-100">
                         <i class="fa-solid fa-file-invoice"></i>
                         <span>Нэгдсэн тайлан харах</span>
@@ -424,19 +413,32 @@
             { name: "Д.Нацагдорж", role: "Технологийн холбооны хэсгийн ахлах инженер" }
         ];
 
-        const STORAGE_KEY = 'work_logs_txy_v19';
-        let workLogs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-
-        // Pagination state
+        let workLogs = [];
         let currentPage = 1;
-        const itemsPerPage = 6;
+        const itemsPerPage = 4;
 
         window.onload = function() {
             populateBrigadeDropdown();
             setDefaultDates();
-            updateFilterDropdowns();
-            renderLogs();
+            fetchLogsFromSheet();
         };
+
+        function fetchLogsFromSheet() {
+            const container = document.getElementById('logsContainer');
+            container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Мэдээлэл татаж байна...</div>`;
+
+            fetch(`${GOOGLE_SCRIPT_URL}?action=get`)
+                .then(res => res.json())
+                .then(data => {
+                    workLogs = data.reverse(); // Хамгийн сүүлд нэмэгдсэн нь эхэнд харагдана
+                    updateFilterDropdowns();
+                    renderLogs();
+                })
+                .catch(err => {
+                    console.error("Дата татахад алдаа гарлаа:", err);
+                    container.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Мэдээлэл татахад алдаа гарлаа.</div>`;
+                });
+        }
 
         function setDefaultDates() {
             const today = new Date().toISOString().split('T')[0];
@@ -576,20 +578,22 @@
             };
 
             if (editIndex === "") {
-                workLogs.unshift(logData);
-                sendToGoogleSheets('add', logData);
+                sendToGoogleSheets('add', logData, () => {
+                    fetchLogsFromSheet();
+                });
             } else {
                 const oldLog = workLogs[parseInt(editIndex)];
-                sendToGoogleSheets('delete', oldLog);
-                workLogs[parseInt(editIndex)] = logData;
-                sendToGoogleSheets('add', logData);
+                sendToGoogleSheets('delete', oldLog, () => {
+                    sendToGoogleSheets('add', logData, () => {
+                        fetchLogsFromSheet();
+                    });
+                });
             }
 
-            saveAndRefresh();
             resetForm();
         }
 
-        function sendToGoogleSheets(action, log) {
+        function sendToGoogleSheets(action, log, callback) {
             const dateDisplay = log.startDate === log.endDate 
                 ? `${log.startDate} (${log.startTime} - ${log.endTime})`
                 : `${log.startDate} ${log.startTime} - ${log.endDate} ${log.endTime}`;
@@ -610,9 +614,10 @@
                 method: 'GET',
                 mode: 'no-cors'
             }).then(() => {
-                console.log(`Google Sheets үйлдэл амжилттай (${action})`);
+                if (callback) callback();
             }).catch(err => {
                 console.error("Google Sheets хүсэлт алдаа гарлаа:", err);
+                if (callback) callback();
             });
         }
 
@@ -635,12 +640,6 @@
                 return `${hrs} цаг`;
             }
             return `${hrs} цаг ${mins} минут`;
-        }
-
-        function saveAndRefresh() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(workLogs));
-            updateFilterDropdowns();
-            renderLogs();
         }
 
         function changePage(direction) {
@@ -666,7 +665,7 @@
                 const matchesLoc = filterLoc === "" || log.location === filterLoc;
                 const matchesStf = filterStf === "" || log.brigade.some(b => b.includes(filterStf));
 
-                const logStart = log.startDate || log.workDate;
+                const logStart = log.startDate;
                 const logEnd = log.endDate || logStart;
 
                 let matchesDate = true;
@@ -697,7 +696,6 @@
                 return;
             }
 
-            // Pagination calculation
             const totalPages = Math.ceil(filtered.length / itemsPerPage);
             if (currentPage > totalPages) currentPage = totalPages;
             if (currentPage < 1) currentPage = 1;
@@ -707,11 +705,11 @@
 
             container.innerHTML = '';
             paginatedLogs.forEach((log) => {
-                const origIdx = workLogs.findIndex(item => item.id === log.id);
+                const origIdx = workLogs.findIndex(item => item.id == log.id);
                 
-                const dateDisplay = log.startDate === log.endDate 
-                    ? `${log.startDate} (${log.startTime} - ${log.endTime})`
-                    : `${log.startDate} ${log.startTime} - ${log.endDate} ${log.endTime}`;
+                const dateDisplay = log.startDate === log.endDate || !log.endDate
+                    ? `${log.startDate}`
+                    : `${log.startDate} - ${log.endDate}`;
 
                 const card = document.createElement('div');
                 card.className = 'bg-slate-50 border border-slate-200 rounded-xl p-4 hover:border-indigo-300 transition space-y-2.5';
@@ -742,7 +740,6 @@
                 container.appendChild(card);
             });
 
-            // Pagination UI update
             if (totalPages > 1) {
                 paginationContainer.classList.remove('hidden');
                 document.getElementById('pageInfo').innerText = `Хуудас ${currentPage} / ${totalPages}`;
@@ -758,10 +755,10 @@
             document.getElementById('editIndex').value = index;
             document.getElementById('location').value = log.location;
             document.getElementById('orderNumber').value = log.orderNumber;
-            document.getElementById('startDate').value = log.startDate || log.workDate;
-            document.getElementById('startTime').value = log.startTime;
-            document.getElementById('endDate').value = log.endDate || log.startDate || log.workDate;
-            document.getElementById('endTime').value = log.endTime;
+            document.getElementById('startDate').value = log.startDate;
+            document.getElementById('startTime').value = "09:00";
+            document.getElementById('endDate').value = log.endDate || log.startDate;
+            document.getElementById('endTime').value = "18:00";
             
             const checkboxes = document.querySelectorAll('input[name="workType"]');
             checkboxes.forEach(cb => {
@@ -791,9 +788,9 @@
         function deleteLog(index) {
             if (confirm("Энэ тэмдэглэлийг устгахдаа итгэлтэй байна уу?")) {
                 const logToDelete = workLogs[index];
-                workLogs.splice(index, 1);
-                sendToGoogleSheets('delete', logToDelete);
-                saveAndRefresh();
+                sendToGoogleSheets('delete', logToDelete, () => {
+                    fetchLogsFromSheet();
+                });
             }
         }
 
@@ -825,17 +822,13 @@
                 tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Мэдээлэл байхгүй байна</td></tr>`;
             } else {
                 workLogs.forEach((log, idx) => {
-                    const dateDisplay = (log.startDate || log.workDate) === log.endDate 
-                        ? `${log.startDate || log.workDate}<br><span class="text-[10px] text-slate-500">${log.startTime} - ${log.endTime}</span>`
-                        : `${log.startDate || log.workDate} ${log.startTime}<br><span class="text-[10px] text-indigo-600 font-semibold">эхэлсэн</span><br>${log.endDate} ${log.endTime}<br><span class="text-[10px] text-rose-600 font-semibold">дууссан</span>`;
-
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-slate-50 transition';
                     tr.innerHTML = `
                         <td class="p-2.5 font-medium text-slate-900">${idx + 1}</td>
                         <td class="p-2.5 font-medium text-slate-900">${log.location}</td>
                         <td class="p-2.5 text-slate-700">${log.orderNumber}</td>
-                        <td class="p-2.5 text-slate-600">${dateDisplay}</td>
+                        <td class="p-2.5 text-slate-600">${log.startDate}</td>
                         <td class="p-2.5 text-slate-700">${log.works.join(', ')}</td>
                         <td class="p-2.5 text-slate-600">${log.brigade.join('; ')}</td>
                         <td class="p-2.5 font-bold text-indigo-600">${formatHoursAndMinutes(log.totalMinutes)}</td>
