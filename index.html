@@ -751,22 +751,8 @@
             paginatedLogs.forEach((log) => {
                 const origIdx = workLogs.findIndex(item => item.id == log.id);
                 
-                // Эхлэх болон дуусах огноо, цагийг зөв хэлбэрээр харуулах
-                let dateDisplay = "";
-                const sDate = log.startDate || "";
-                const eDate = log.endDate || sDate;
-                const sTime = log.startTime || "";
-                const eTime = log.endTime || "";
-
-                if (sDate === eDate) {
-                    if (sTime && eTime) {
-                        dateDisplay = `${sDate} (${sTime} - ${eTime})`;
-                    } else {
-                        dateDisplay = sDate;
-                    }
-                } else {
-                    dateDisplay = `${sDate} ${sTime} - ${eDate} ${eTime}`;
-                }
+               // Google Sheets дээр хадгалагдсан timeRange утгыг шууд ашиглах
+    let dateDisplay = log.timeRange || (log.startDate + (log.startTime ? ` ${log.startTime}` : ''));
 
                 const card = document.createElement('div');
                 card.className = 'bg-slate-50 border border-slate-200 rounded-xl p-4 hover:border-indigo-300 transition space-y-2.5';
