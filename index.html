@@ -73,7 +73,7 @@
                 </div>
                 <div class="flex items-center space-x-2 sm:space-x-3">
     <!-- 1. Шинэчлэх товч -->
-    <button onclick="fetchLogsFromSheet()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center space-x-1.5" title="Дата шинэчлэх">
+    <button onclick="reverse()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center space-x-1.5" title="Дата шинэчлэх">
         <i class="fa-solid fa-rotate"></i>
         <span class="hidden sm:inline">Шинэчлэх</span>
     </button>
@@ -460,7 +460,7 @@
         window.onload = function() {
             populateBrigadeDropdown();
             setDefaultDates();
-            fetchLogsFromSheet();
+            reverse();
         };
 
        function formatDateString(dateStr) {
@@ -471,27 +471,32 @@
             return dateStr;
         }
 
-        function fetchLogsFromSheet() {
-            const container = document.getElementById('logsContainer');
-            container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Мэдээлэл татаж байна...</div>`;
+       function fetchLogsFromSheet() {
+    const container = document.getElementById('logsContainer');
+    container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Мэдээлэл татаж байна...</div>`;
 
-            fetch(`${GOOGLE_SCRIPT_URL}?action=get`)
-                .then(res => res.json())
-                .then(data => {
-                    workLogs = data.map(log => ({
-                        ...log,
-                        startDate: formatDateString(log.startDate),
-                        endDate: formatDateString(log.endDate)
-                    })).reverse();
-                    
-                    updateFilterDropdowns();
-                    renderLogs();
-                })
-                .catch(err => {
-                    console.error("Дата татахад алдаа гарлаа:", err);
-                    container.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Мэдээлэл татахад алдаа гарлаа.</div>`;
-                });
-        }
+    fetch(`${GOOGLE_SCRIPT_URL}?action=get`)
+        .then(res => res.json())
+        .then(data => {
+            workLogs = data.map(log => ({
+                ...log,
+                startDate: formatDateString(log.startDate),
+                endDate: formatDateString(log.endDate)
+            })).sort((a, b) => {
+                // Огноо болон цагаар хамгийн сүүлийнх нь хамгийн дээрээ гарах эрэмбэ
+                const dtA = new Date(`${a.startDate}T${a.startTime || '00:00'}`);
+                const dtB = new Date(`${b.startDate}T${b.startTime || '00:00'}`);
+                return dtB - dtA;
+            });
+
+            updateFilterDropdowns();
+            renderLogs();
+        })
+        .catch(err => {
+            console.error("Дата татахад алдаа гарлаа:", err);
+            container.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Мэдээлэл татахад алдаа гарлаа.</div>`;
+        });
+}
 
         function setDefaultDates() {
             const today = new Date().toISOString().split('T')[0];
