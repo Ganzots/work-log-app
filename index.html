@@ -899,6 +899,35 @@
             return String(field).split(separator).map(s => s.trim()).filter(Boolean);
         }
 
+        // Текст хэлбэртэй цагийг минут руу хөрвүүлэх туслах функц
+        function parseDurationToMinutes(log) {
+            if (typeof log.totalMinutes === 'number' && log.totalMinutes > 0) {
+                return log.totalMinutes;
+            }
+
+            const hoursStr = String(log.totalHours || '');
+            let totalMins = 0;
+            const hourMatch = hoursStr.match(/(\d+)\s*цаг/);
+            const minMatch = hoursStr.match(/(\d+)\s*минут/);
+
+            if (hourMatch || minMatch) {
+                if (hourMatch) totalMins += parseInt(hourMatch[1], 10) * 60;
+                if (minMatch) totalMins += parseInt(minMatch[1], 10);
+                if (totalMins > 0) return totalMins;
+            }
+
+            const tr = String(log.timeRange || '');
+            const timeMatch = tr.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+            if (timeMatch) {
+                const [t1H, t1M] = timeMatch[1].split(':').map(Number);
+                const [t2H, t2M] = timeMatch[2].split(':').map(Number);
+                const diff = (t2H * 60 + t2M) - (t1H * 60 + t1M);
+                if (diff > 0) return diff;
+            }
+
+            return 0;
+        }
+
         function fetchLogsFromSheet() {
             const container = document.getElementById('logsContainer');
             if (container) {
@@ -913,13 +942,17 @@
                         return;
                     }
 
-                    workLogs = data.map(log => ({
-                        ...log,
-                        works: parseArrayField(log.works, ','),
-                        brigade: parseArrayField(log.brigade, ';'),
-                        startDate: formatDateString(log.startDate),
-                        endDate: formatDateString(log.endDate)
-                    })).sort((a, b) => {
+                    workLogs = data.map(log => {
+                        const calculatedMinutes = parseDurationToMinutes(log);
+                        return {
+                            ...log,
+                            works: parseArrayField(log.works, ','),
+                            brigade: parseArrayField(log.brigade, ';'),
+                            startDate: formatDateString(log.startDate),
+                            endDate: formatDateString(log.endDate),
+                            totalMinutes: calculatedMinutes
+                        };
+                    }).sort((a, b) => {
                         const dateA = a.startDate || '';
                         const timeA = a.startTime || '00:00';
                         const dateB = b.startDate || '';
@@ -940,7 +973,6 @@
                     }
                 });
         }
-
         function setDefaultDates() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('startDate').value = today;
