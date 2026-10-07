@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ажил гүйцэтгэлийн тэмдэглэл - Төв диспетчерийн алба-ТХХэсэг</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #reportModalContent, #reportModalContent * {
+                visibility: visible;
+            }
+            #reportModalContent {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+                box-shadow: none !important;
+                background: white !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between antialiased" onclick="closeDropdownOutside(event)">
+
+    <div>
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md shadow-indigo-100 flex items-center justify-center">
+                        <i class="fa-solid fa-bolt text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight flex items-center space-x-2">
+                            <span>Ажил Гүйцэтгэлийн Тэмдэглэл</span>
+                        </h1>
+                        <p class="text-xs text-slate-500 flex items-center space-x-1">
+                            <span class="font-semibold text-slate-700">Диспетчерийн үндэсний төв ТӨХК</span>
+                            <span class="text-slate-300">|</span>
+                            <span>Төв диспетчерийн алба-ТХХэсэг</span>
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <button onclick="openGlobalReportModal()" class="inline-flex items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm shadow-indigo-100">
+                        <i class="fa-solid fa-file-invoice"></i>
+                        <span>Нэгдсэн тайлан харах</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Form Section -->
+            <section class="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col h-fit">
+                <div class="flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
+                    <div class="flex items-center space-x-2 text-indigo-600">
+                        <i class="fa-solid fa-circle-plus text-lg"></i>
+                        <h2 class="text-base font-bold text-slate-900">Шинэ тэмдэглэл бүртгэх</h2>
+                    </div>
+                    <span id="formModeBadge" class="text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-medium hidden flex items-center space-x-1">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <span>Засварлаж байна</span>
+                    </span>
+                </div>
+
+                <form id="workLogForm" class="space-y-5" onsubmit="handleFormSubmit(event)">
+                    <input type="hidden" id="editIndex" value="">
+
+                    <!-- Байршил -->
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center space-x-1.5">
+                            <i class="fa-solid fa-location-dot text-indigo-500 w-4"></i>
+                            <span>Байршил <span class="text-rose-500">*</span></span>
+                        </label>
+                        <input type="text" id="location" required placeholder="Жишээ нь: Чойр дэд станц" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                    </div>
+
+                    <!-- Няряд, шийдвэрийн дугаар -->
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center space-x-1.5">
+                            <i class="fa-solid fa-file-contract text-indigo-500 w-4"></i>
+                            <span>Няряд, шийдвэрийн дугаар <span class="text-rose-500">*</span></span>
+                        </label>
+                        <input type="text" id="orderNumber" required placeholder="Жишээ нь: №2026/45" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                    </div>
+
+                    <!-- Ажил эхэлсэн огноо ба цаг -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center space-x-1.5">
+                                <i class="fa-solid fa-calendar-days text-indigo-500 w-4"></i>
+                                <span>Эхлэх огноо <span class="text-rose-500">*</span></span>
+                            </label>
+                            <input type="date" id="startDate" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center space-x-1.5">
+                                <i class="fa-solid fa-hourglass-start text-indigo-500 w-4"></i>
+                                <span>Эхлэх цаг <span class="text-rose-500">*</span></span>
+                            </label>
+                            <input type="time" id="startTime" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                        </div>
+                    </div>
+
+                    <!-- Ажил дууссан огноо ба цаг -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center space-x-1.5">
+                                <i class="fa-solid fa-calendar-check text-indigo-500 w-4"></i>
+                                <span>Дуусах огноо <span class="text-rose-500">*</span></span>
+                            </label>
+                            <input type="date" id="endDate" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center space-x-1.5">
+                                <i class="fa-solid fa-hourglass-end text-indigo-500 w-4"></i>
+                                <span>Дуусах цаг <span class="text-rose-500">*</span></span>
+                            </label>
+                            <input type="time" id="endTime" required class="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                        </div>
+                    </div>
+
+                    <!-- Хийгдсэн ажил -->
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 flex items-center space-x-1.5">
+                            <i class="fa-solid fa-list-check text-indigo-500 w-4"></i>
+                            <span>Хийгдсэн ажил <span class="text-rose-500">*</span></span>
+                        </label>
+                        <div class="space-y-2 bg-slate-50 border border-slate-300 rounded-xl p-3.5" id="workTypesContainer">
+                            <label class="flex items-center space-x-2.5 text-sm text-slate-700 cursor-pointer">
+                                <input type="checkbox" name="workType" value="Үзлэг, үйлчилгээ хийв." class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                <span>Үзлэг, үйлчилгээ хийв.</span>
+                            </label>
+                            <label class="flex items-center space-x-2.5 text-sm text-slate-700 cursor-pointer">
+                                <input type="checkbox" name="workType" value="Тоног төхөөрөмж сольж суурилуулсан." class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                <span>Тоног төхөөрөмж сольж суурилуулсан.</span>
+                            </label>
+                            <label class="flex items-center space-x-2.5 text-sm text-slate-700 cursor-pointer">
+                                <input type="checkbox" name="workType" value="Үндсэн хөрөнгийн тооллого хийсэн." class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                <span>Үндсэн хөрөнгийн тооллого хийсэн.</span>
+                            </label>
+                            <label class="flex items-center space-x-2.5 text-sm text-slate-700 cursor-pointer">
+                                <input type="checkbox" name="workType" value="Үл тохирол арилгав." class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                <span>Үл тохирол арилгав.</span>
+                            </label>
+                            <label class="flex items-center space-x-2.5 text-sm text-slate-700 cursor-pointer">
+                                <input type="checkbox" name="workType" value="Панелиудын бохирдлыг цэвэрлэж, тоосыг соруулав." class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                <span>Панелиудын бохирдлыг цэвэрлэж, тоосыг соруулав.</span>
+                            </label>
+                            <label class="flex items-center space-x-2.5 text-sm text-slate-700 cursor-pointer">
+                                <input type="checkbox" name="workType" value="Төхөөрөмжийн тохиргооны файлыг хуулж авч, архивлаВ." class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                <span>Төхөөрөмжийн тохиргооны файлыг хуулж авч, архивлаВ.</span>
+                            </label>
+                            <label class="flex items-center space-x-2.5 text-sm text-slate-700 cursor-pointer">
+                                <input type="checkbox" name="workType" value="Техникийн комиссоор ажилласан." class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                <span>Техникийн комиссоор ажилласан.</span>
+                            </label>
+                            <label class="flex items-center space-x-2.5 text-sm text-slate-700 cursor-pointer">
+                                <input type="checkbox" name="workType" value="Улсын комиссоор ажилласан." class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                <span>Улсын комиссоор ажилласан.</span>
+                            </label>
+                            <div class="flex items-center space-x-2.5 pt-1">
+                                <input type="checkbox" id="otherWorkCheckbox" onchange="toggleOtherInput()" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
+                                <span class="text-sm text-slate-700 font-medium">Бусад:</span>
+                                <input type="text" id="otherWorkText" disabled placeholder="Бусад ажил бичих..." class="flex-grow px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs disabled:bg-slate-100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Бригадын бүрэлдэхүүн (Custom Dropdown) -->
+                    <div class="relative">
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-1.5 flex items-center space-x-1.5">
+                            <i class="fa-solid fa-users-gear text-indigo-500 w-4"></i>
+                            <span>Бригадын бүрэлдэхүүн <span class="text-rose-500">*</span></span>
+                        </label>
+                        
+                        <div id="brigadeDropdownBtn" onclick="toggleBrigadeDropdown(event)" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm text-slate-800 cursor-pointer flex items-center justify-between hover:bg-white transition">
+                            <span id="brigadeDropdownLabel" class="text-slate-400">Ажилтнууд сонгох...</span>
+                            <i class="fa-solid fa-chevron-down text-slate-400 text-xs"></i>
+                        </div>
+
+                        <div id="brigadeDropdownMenu" class="hidden absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-20 p-3 max-h-60 overflow-y-auto space-y-2">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex items-center space-x-3 pt-2">
+                        <button type="submit" id="submitBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-xl text-sm transition shadow-sm shadow-indigo-100 flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Тэмдэглэл нэмэх</span>
+                        </button>
+                        <button type="button" id="cancelEditBtn" onclick="resetForm()" class="hidden bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 px-4 rounded-xl text-sm transition flex items-center space-x-1">
+                            <i class="fa-solid fa-xmark"></i>
+                            <span>Болих</span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Right Section: List & Filter -->
+            <section class="lg:col-span-7 flex flex-col space-y-6">
+                
+                <!-- Filters Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-center space-x-2 text-indigo-600">
+                            <i class="fa-solid fa-filter text-lg"></i>
+                            <h2 class="text-base font-bold text-slate-900">Хайлт & Шүүлтүүр</h2>
+                        </div>
+                        <div class="flex items-center space-x-2 text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-xl">
+                            <i class="fa-solid fa-clock-rotate-left text-indigo-500 mr-1"></i>
+                            <span>Нийт ажилласан цаг: <strong id="totalHoursStat" class="text-slate-900">0 цаг 0 минут</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filter Controls -->
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </span>
+                                <input type="text" id="searchInput" oninput="renderLogs()" placeholder="Түлхүүр үгээр хайх..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                            </div>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-location-crosshairs text-xs"></i>
+                                </span>
+                                <select id="filterLocation" onchange="renderLogs()" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                                    <option value="">Бүх байршил</option>
+                                </select>
+                            </div>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-user-gear text-xs"></i>
+                                </span>
+                                <select id="filterStaff" onchange="renderLogs()" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                                    <option value="">Бүх ажилтнууд</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Date Interval Filter Row -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-slate-500 font-medium whitespace-nowrap">Эхлэх огноо:</span>
+                                <input type="date" id="filterStartDate" onchange="renderLogs()" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs text-slate-500 font-medium whitespace-nowrap">Дуусах огноо:</span>
+                                <input type="date" id="filterEndDate" onchange="renderLogs()" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Logs List -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex-grow flex flex-col">
+                    <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                        <div class="flex items-center space-x-2 text-indigo-600">
+                            <i class="fa-solid fa-rectangle-list text-lg"></i>
+                            <h2 class="text-base font-bold text-slate-900">Бүртгэгдсэн тэмдэглэлүүд</h2>
+                        </div>
+                        <span id="logCountBadge" class="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-full flex items-center space-x-1">
+                            <i class="fa-solid fa-database text-[10px]"></i>
+                            <span>0 тэмдэглэл</span>
+                        </span>
+                    </div>
+
+                    <div id="logsContainer" class="space-y-4 overflow-y-auto max-h-[600px] pr-1">
+                        <!-- Dynamic logs -->
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer Copyright -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>© 2026 Диспетчерийн үндэсний төв ТӨХК. Бүх эрх хуулиар хамгаалагдсан.</p>
+            <p class="text-slate-400">Технологи, холбооны хэсэг</p>
+        </div>
+    </footer>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
+            
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 no-print">
+                <div class="flex items-center space-x-2 text-indigo-600">
+                    <i class="fa-solid fa-file-invoice text-xl"></i>
+                    <h3 class="text-lg font-bold text-slate-900">Ажил Гүйцэтгэлийн Тайлан</h3>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="window.print()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3.5 py-2 rounded-xl text-sm font-medium transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Хэвлэх / PDF</span>
+                    </button>
+                    <button onclick="closeGlobalReportModal()" class="text-slate-400 hover:text-slate-600 p-2 rounded-xl transition">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="reportModalContent" class="p-8 overflow-y-auto space-y-6 flex-grow bg-white text-slate-800">
+                
+                <div class="text-center border-b border-slate-200 pb-6">
+                    <h2 class="text-xl font-bold text-slate-900 uppercase tracking-wide">Ажил гүйцэтгэлийн тэмдэглэл тайлан</h2>
+                    <p class="text-xs text-slate-500 mt-1">Диспетчерийн үндэсний төв ТӨХК - Төв диспетчерийн алба (ТХХэсэг)</p>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
+                    <div>
+                        <p class="text-xs text-slate-500 font-semibold uppercase">Нийт тэмдэглэл</p>
+                        <p id="repTotalLogs" class="text-lg font-bold text-slate-900 mt-1">0</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-semibold uppercase">Нийт ажилласан цаг</p>
+                        <p id="repTotalHours" class="text-lg font-bold text-indigo-600 mt-1">0 цаг 0 минут</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-slate-500 font-semibold uppercase">Нийт ажилтнууд</p>
+                        <p id="repTotalStaff" class="text-lg font-bold text-slate-900 mt-1">0</p>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="overflow-x-auto border border-slate-200 rounded-xl">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200">
+                                    <th class="p-2.5">№</th>
+                                    <th class="p-2.5">Байршил</th>
+                                    <th class="p-2.5">Няряд №</th>
+                                    <th class="p-2.5">Ажилласан хугацаа (Огноо, цаг)</th>
+                                    <th class="p-2.5">Хийгдсэн ажил</th>
+                                    <th class="p-2.5">Бригадын бүрэлдэхүүн</th>
+                                    <th class="p-2.5">Нийт цаг</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportTableBody" class="divide-y divide-slate-200">
+                                <!-- Dynamic rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sign-off Sections -->
+                <div class="grid grid-cols-2 gap-8 pt-8 mt-8 border-t border-slate-200 text-sm">
+                    <div class="space-y-4">
+                        <p class="font-bold text-slate-900 uppercase text-xs tracking-wider text-indigo-600">Тайлан гаргасан:</p>
+                        <div class="space-y-2 text-slate-600 text-xs">
+                            <p>Нэр: <span class="font-medium text-slate-800">...................................................</span></p>
+                            <p>Гарын үсэг: <span class="font-medium text-slate-800">...................................................</span></p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <p class="font-bold text-slate-900 uppercase text-xs tracking-wider text-indigo-600">Танилцсан:</p>
+                        <div class="space-y-2 text-slate-600 text-xs">
+                            <p>Нэр: <span class="font-medium text-slate-800">...................................................</span></p>
+                            <p>Гарын үсэг: <span class="font-medium text-slate-800">...................................................</span></p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-end no-print">
+                <button onclick="closeGlobalReportModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-xl text-sm font-medium transition">
+                    Хаах
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        const brigadeStaffList = [
+            { name: "Ц.Ганзориг", role: "Тоолуурын нэгдсэн системийн инженер" },
+            { name: "М.Энхбаясгалан", role: "Электроникийн инженер" },
+            { name: "Г.Гэрэлт-Од", role: "Холбооны инженер" },
+            { name: "Д.Баттөмөр", role: "Шилэн кабелийн инженер" },
+            { name: "Н.Анар", role: "Хяналт мэдээллийн системийн инженер" },
+            { name: "Б.Батхүү", role: "Хяналт мэдээллийн системийн инженер" },
+            { name: "О.Бямбадорж", role: "Хяналт мэдээллийн системийн инженер" },
+            { name: "Б.Давааням", role: "Хяналт мэдээллийн системийн инженер" },
+            { name: "Д.Нацагдорж", role: "Технологийн холбооны хэсгийн ахлах инженер" }
+        ];
+
+        const STORAGE_KEY = 'work_logs_txy_v15';
+        let workLogs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        window.onload = function() {
+            populateBrigadeDropdown();
+            setDefaultDates();
+            updateFilterDropdowns();
+            renderLogs();
+        };
+
+        function setDefaultDates() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = today;
+            document.getElementById('startTime').value = "09:00";
+            document.getElementById('endTime').value = "18:00";
+        }
+
+        function toggleOtherInput() {
+            const checkbox = document.getElementById('otherWorkCheckbox');
+            const input = document.getElementById('otherWorkText');
+            input.disabled = !checkbox.checked;
+            if(!checkbox.checked) input.value = '';
+        }
+
+        function toggleBrigadeDropdown(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('brigadeDropdownMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        function closeDropdownOutside(event) {
+            const dropdown = document.getElementById('brigadeDropdownMenu');
+            const btn = document.getElementById('brigadeDropdownBtn');
+            if (!dropdown.contains(event.target) && !btn.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        function populateBrigadeDropdown(selectedStaff = []) {
+            const menu = document.getElementById('brigadeDropdownMenu');
+            menu.innerHTML = '';
+            brigadeStaffList.forEach((staff) => {
+                const fullName = `${staff.name} (${staff.role})`;
+                const isChecked = selectedStaff.includes(fullName) ? 'checked' : '';
+                const label = document.createElement('label');
+                label.className = 'flex items-center space-x-2.5 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition';
+                label.innerHTML = `
+                    <input type="checkbox" value="${fullName}" ${isChecked} onchange="updateBrigadeLabel()" class="brigade-checkbox rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 mt-0.5 flex-shrink-0">
+                    <span class="leading-tight"><strong class="text-slate-900">${staff.name}</strong> <span class="text-xs text-slate-500 block sm:inline">(${staff.role})</span></span>
+                `;
+                menu.appendChild(label);
+            });
+            updateBrigadeLabel();
+        }
+
+        function updateBrigadeLabel() {
+            const checkboxes = document.querySelectorAll('.brigade-checkbox:checked');
+            const label = document.getElementById('brigadeDropdownLabel');
+            
+            if (checkboxes.length === 0) {
+                label.innerText = "Ажилтнууд сонгох...";
+                label.className = "text-slate-400";
+            } else {
+                const names = Array.from(checkboxes).map(cb => cb.value.split(' (')[0]);
+                label.innerText = names.join(", ");
+                label.className = "text-slate-800 font-medium truncate";
+            }
+        }
+
+        function updateFilterDropdowns() {
+            const locSelect = document.getElementById('filterLocation');
+            const staffSelect = document.getElementById('filterStaff');
+
+            const currentLoc = locSelect.value;
+            const currentStaff = staffSelect.value;
+
+            const locations = [...new Set(workLogs.map(l => l.location))];
+            locSelect.innerHTML = `<option value="">Бүх байршил</option>` + locations.map(loc => `<option value="${loc}">${loc}</option>`).join('');
+            locSelect.value = currentLoc;
+
+            const staffSet = new Set();
+            workLogs.forEach(l => l.brigade.forEach(b => staffSet.add(b.split(' (')[0])));
+            const staffList = [...staffSet];
+            staffSelect.innerHTML = `<option value="">Бүх ажилтнууд</option>` + staffList.map(st => `<option value="${st}">${st}</option>`).join('');
+            staffSelect.value = currentStaff;
+        }
+
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const editIndex = document.getElementById('editIndex').value;
+            const location = document.getElementById('location').value;
+            const orderNumber = document.getElementById('orderNumber').value;
+            
+            const startDate = document.getElementById('startDate').value;
+            const startTime = document.getElementById('startTime').value;
+            const endDate = document.getElementById('endDate').value;
+            const endTime = document.getElementById('endTime').value;
+
+            const totalMinutes = calculateTotalMinutes(startDate, startTime, endDate, endTime);
+
+            if (totalMinutes <= 0) {
+                alert("Дуусах огноо/цаг нь эхлэх огноо/цагаас хойш байх ёстой!");
+                return;
+            }
+
+            const workTypeCheckboxes = document.querySelectorAll('input[name="workType"]:checked');
+            let selectedWorks = Array.from(workTypeCheckboxes).map(cb => cb.value);
+
+            const otherChecked = document.getElementById('otherWorkCheckbox').checked;
+            const otherText = document.getElementById('otherWorkText').value.trim();
+            if (otherChecked && otherText) {
+                selectedWorks.push("Бусад: " + otherText);
+            }
+
+            if (selectedWorks.length === 0) {
+                alert("Дор хаяж нэг хийгдсэн ажил сонгоно уу!");
+                return;
+            }
+
+            const brigadeCheckboxes = document.querySelectorAll('.brigade-checkbox:checked');
+            const brigade = Array.from(brigadeCheckboxes).map(cb => cb.value);
+
+            if (brigade.length === 0) {
+                alert("Дор хаяж нэг бригадын гишүүн сонгоно уу!");
+                return;
+            }
+
+            const logData = {
+                id: editIndex === "" ? Date.now() : workLogs[editIndex].id,
+                location,
+                orderNumber,
+                startDate,
+                startTime,
+                endDate,
+                endTime,
+                totalMinutes,
+                works: selectedWorks,
+                brigade
+            };
+
+            if (editIndex === "") {
+                workLogs.unshift(logData);
+            } else {
+                workLogs[parseInt(editIndex)] = logData;
+            }
+
+            saveAndRefresh();
+            resetForm();
+        }
+
+        function calculateTotalMinutes(d1, t1, d2, t2) {
+            try {
+                const startDateTime = new Date(`${d1}T${t1}`);
+                const endDateTime = new Date(`${d2}T${t2}`);
+                const diffMs = endDateTime - startDateTime;
+                return Math.floor(diffMs / (1000 * 60));
+            } catch (e) {
+                return 540;
+            }
+        }
+
+        function formatHoursAndMinutes(totalMins) {
+            if (totalMins < 0) return "0 цаг";
+            const hrs = Math.floor(totalMins / 60);
+            const mins = totalMins % 60;
+            if (mins === 0) {
+                return `${hrs} цаг`;
+            }
+            return `${hrs} цаг ${mins} минут`;
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(workLogs));
+            updateFilterDropdowns();
+            renderLogs();
+        }
+
+        function renderLogs() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filterLoc = document.getElementById('filterLocation').value;
+            const filterStf = document.getElementById('filterStaff').value;
+            const filterStart = document.getElementById('filterStartDate').value;
+            const filterEnd = document.getElementById('filterEndDate').value;
+            const container = document.getElementById('logsContainer');
+
+            const filtered = workLogs.filter(log => {
+                const matchesQuery = log.location.toLowerCase().includes(query) ||
+                                     log.orderNumber.toLowerCase().includes(query) ||
+                                     log.brigade.some(b => b.toLowerCase().includes(query)) ||
+                                     log.works.some(w => w.toLowerCase().includes(query));
+                
+                const matchesLoc = filterLoc === "" || log.location === filterLoc;
+                const matchesStf = filterStf === "" || log.brigade.some(b => b.includes(filterStf));
+
+                // Date interval filter check
+                const logStart = log.startDate || log.workDate;
+                const logEnd = log.endDate || logStart;
+
+                let matchesDate = true;
+                if (filterStart && filterEnd) {
+                    matchesDate = logStart <= filterEnd && logEnd >= filterStart;
+                } else if (filterStart) {
+                    matchesDate = logEnd >= filterStart;
+                } else if (filterEnd) {
+                    matchesDate = logStart <= filterEnd;
+                }
+
+                return matchesQuery && matchesLoc && matchesStf && matchesDate;
+            });
+
+            document.getElementById('logCountBadge').innerHTML = `<i class="fa-solid fa-database text-[10px] mr-1"></i><span>${filtered.length} тэмдэглэл</span>`;
+
+            const sumMins = filtered.reduce((sum, item) => sum + (item.totalMinutes || 0), 0);
+            document.getElementById('totalHoursStat').innerText = formatHoursAndMinutes(sumMins);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-slate-400 space-y-3">
+                        <i class="fa-solid fa-folder-open text-4xl text-slate-300"></i>
+                        <p class="text-sm">Бүртгэгдсэн тэмдэглэл олдсонгүй</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            filtered.forEach((log) => {
+                const origIdx = workLogs.findIndex(item => item.id === log.id);
+                
+                const dateDisplay = log.startDate === log.endDate 
+                    ? `${log.startDate} (${log.startTime} - ${log.endTime})`
+                    : `${log.startDate} ${log.startTime} - ${log.endDate} ${log.endTime}`;
+
+                const card = document.createElement('div');
+                card.className = 'bg-slate-50 border border-slate-200 rounded-xl p-4 hover:border-indigo-300 transition space-y-2.5';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="bg-indigo-600 text-white text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center space-x-1">
+                            <i class="fa-solid fa-calendar-day text-[10px]"></i>
+                            <span>${dateDisplay}</span>
+                        </span>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="editLog(${origIdx})" class="text-slate-400 hover:text-indigo-600 p-1" title="Засах"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button onclick="deleteLog(${origIdx})" class="text-slate-400 hover:text-rose-600 p-1" title="Устгах"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+                            <i class="fa-solid fa-location-dot text-indigo-500 text-xs"></i>
+                            <span>${log.location}</span>
+                            <span class="text-xs font-normal text-slate-500">(Няряд: ${log.orderNumber})</span>
+                        </h3>
+                        <p class="text-xs text-indigo-700 font-medium mt-1">✓ ${log.works.join(', ')}</p>
+                    </div>
+                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-2 border-t border-slate-200 text-xs text-slate-500 gap-1">
+                        <span class="flex items-center space-x-1"><i class="fa-solid fa-users text-indigo-400 text-xs"></i><span>Бригад: <strong class="text-slate-700">${log.brigade.join('; ')}</strong></span></span>
+                        <span class="text-indigo-600 font-bold whitespace-nowrap flex items-center space-x-1"><i class="fa-solid fa-hourglass-half text-[10px]"></i><span>Нийт: ${formatHoursAndMinutes(log.totalMinutes)}</span></span>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function editLog(index) {
+            const log = workLogs[index];
+            document.getElementById('editIndex').value = index;
+            document.getElementById('location').value = log.location;
+            document.getElementById('orderNumber').value = log.orderNumber;
+            document.getElementById('startDate').value = log.startDate || log.workDate;
+            document.getElementById('startTime').value = log.startTime;
+            document.getElementById('endDate').value = log.endDate || log.startDate || log.workDate;
+            document.getElementById('endTime').value = log.endTime;
+            
+            const checkboxes = document.querySelectorAll('input[name="workType"]');
+            checkboxes.forEach(cb => {
+                cb.checked = log.works.includes(cb.value);
+            });
+
+            const otherWorkItem = log.works.find(w => w.startsWith("Бусад: "));
+            if (otherWorkItem) {
+                document.getElementById('otherWorkCheckbox').checked = true;
+                const textInput = document.getElementById('otherWorkText');
+                textInput.disabled = false;
+                textInput.value = otherWorkItem.replace("Бусад: ", "");
+            } else {
+                document.getElementById('otherWorkCheckbox').checked = false;
+                document.getElementById('otherWorkText').disabled = true;
+                document.getElementById('otherWorkText').value = "";
+            }
+
+            populateBrigadeDropdown(log.brigade);
+
+            document.getElementById('formModeBadge').classList.remove('hidden');
+            document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i><span>Шинэчлэх</span>';
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteLog(index) {
+            if (confirm("Энэ тэмдэглэлийг устгахдаа итгэлтэй байна уу?")) {
+                workLogs.splice(index, 1);
+                saveAndRefresh();
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('workLogForm').reset();
+            document.getElementById('editIndex').value = "";
+            setDefaultDates();
+            populateBrigadeDropdown();
+            document.getElementById('otherWorkText').disabled = true;
+            document.getElementById('formModeBadge').classList.add('hidden');
+            document.getElementById('submitBtn').innerHTML = '<i class="fa-solid fa-plus"></i><span>Тэмдэглэл нэмэх</span>';
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+        }
+
+        function openGlobalReportModal() {
+            document.getElementById('reportModal').classList.remove('hidden');
+            document.getElementById('repTotalLogs').innerText = workLogs.length;
+            const sumMins = workLogs.reduce((sum, item) => sum + (item.totalMinutes || 0), 0);
+            document.getElementById('repTotalHours').innerText = formatHoursAndMinutes(sumMins);
+
+            const staffSet = new Set();
+            workLogs.forEach(l => l.brigade.forEach(s => staffSet.add(s)));
+            document.getElementById('repTotalStaff').innerText = staffSet.size;
+
+            const tbody = document.getElementById('reportTableBody');
+            tbody.innerHTML = '';
+
+            if (workLogs.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">Мэдээлэл байхгүй байна</td></tr>`;
+            } else {
+                workLogs.forEach((log, idx) => {
+                    const dateDisplay = (log.startDate || log.workDate) === log.endDate 
+                        ? `${log.startDate || log.workDate}<br><span class="text-[10px] text-slate-500">${log.startTime} - ${log.endTime}</span>`
+                        : `${log.startDate || log.workDate} ${log.startTime}<br><span class="text-[10px] text-indigo-600 font-semibold">эхэлсэн</span><br>${log.endDate} ${log.endTime}<br><span class="text-[10px] text-rose-600 font-semibold">дууссан</span>`;
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50 transition';
+                    tr.innerHTML = `
+                        <td class="p-2.5 font-medium text-slate-900">${idx + 1}</td>
+                        <td class="p-2.5 font-medium text-slate-900">${log.location}</td>
+                        <td class="p-2.5 text-slate-700">${log.orderNumber}</td>
+                        <td class="p-2.5 text-slate-600">${dateDisplay}</td>
+                        <td class="p-2.5 text-slate-700">${log.works.join(', ')}</td>
+                        <td class="p-2.5 text-slate-600">${log.brigade.join('; ')}</td>
+                        <td class="p-2.5 font-bold text-indigo-600">${formatHoursAndMinutes(log.totalMinutes)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        function closeGlobalReportModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
