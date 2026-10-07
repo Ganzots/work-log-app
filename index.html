@@ -458,10 +458,10 @@
         const itemsPerPage = 4;
 
         window.onload = function() {
-            populateBrigadeDropdown();
-            setDefaultDates();
-            reverse();
-        };
+    populateBrigadeDropdown();
+    setDefaultDates();
+    fetchLogsFromSheet();
+};
 
        function formatDateString(dateStr) {
             if (!dateStr) return '';
@@ -473,20 +473,33 @@
 
        function fetchLogsFromSheet() {
     const container = document.getElementById('logsContainer');
-    container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Мэдээлэл татаж байна...</div>`;
+    if (container) {
+        container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Мэдээлэл татаж байна...</div>`;
+    }
 
     fetch(`${GOOGLE_SCRIPT_URL}?action=get`)
         .then(res => res.json())
         .then(data => {
+            if (!Array.isArray(data)) {
+                console.error("Өгөгдөл буруу форматтай байна:", data);
+                return;
+            }
+
             workLogs = data.map(log => ({
                 ...log,
                 startDate: formatDateString(log.startDate),
                 endDate: formatDateString(log.endDate)
             })).sort((a, b) => {
-                // Огноо болон цагаар хамгийн сүүлийнх нь хамгийн дээрээ гарах эрэмбэ
-                const dtA = new Date(`${a.startDate}T${a.startTime || '00:00'}`);
-                const dtB = new Date(`${b.startDate}T${b.startTime || '00:00'}`);
-                return dtB - dtA;
+                // Огноог аюулгүй шалгах логик (null / хоосон байсан ч гацахгүй)
+                const dateA = a.startDate || '';
+                const timeA = a.startTime || '00:00';
+                const dateB = b.startDate || '';
+                const timeB = b.startTime || '00:00';
+
+                const dtA = new Date(`${dateA}T${timeA}`).getTime() || 0;
+                const dtB = new Date(`${dateB}T${timeB}`).getTime() || 0;
+
+                return dtB - dtA; // Хамгийн сүүлийн огноо хамгийн дээрээ гарна
             });
 
             updateFilterDropdowns();
@@ -494,7 +507,9 @@
         })
         .catch(err => {
             console.error("Дата татахад алдаа гарлаа:", err);
-            container.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Мэдээлэл татахад алдаа гарлаа.</div>`;
+            if (container) {
+                container.innerHTML = `<div class="text-center py-8 text-rose-400 text-xs">Мэдээлэл татахад алдаа гарлаа.</div>`;
+            }
         });
 }
 
