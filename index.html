@@ -751,35 +751,67 @@
             paginatedLogs.forEach((log) => {
                 const origIdx = workLogs.findIndex(item => item.id == log.id);
                 
-               // Google Sheets дээр хадгалагдсан timeRange утгыг шууд ашиглах
-    let dateDisplay = log.timeRange || (log.startDate + (log.startTime ? ` ${log.startTime}` : ''));
+               // Огноо болон цагийг тусад нь задлах логик
+let dateOnly = log.startDate || '';
+let timeOnly = '';
 
-                const card = document.createElement('div');
-                card.className = 'bg-slate-50 border border-slate-200 rounded-xl p-4 hover:border-indigo-300 transition space-y-2.5';
-                card.innerHTML = `
-                    <div class="flex items-center justify-between">
-                        <span class="bg-indigo-600 text-white text-xs px-2.5 py-1 rounded-lg font-semibold flex items-center space-x-1">
-                            <i class="fa-solid fa-calendar-day text-[10px]"></i>
-                            <span>${dateDisplay}</span>
-                        </span>
-                        <div class="flex items-center space-x-2">
-                            <button onclick="editLog(${origIdx})" class="text-slate-400 hover:text-indigo-600 p-1" title="Засах"><i class="fa-solid fa-pen-to-square"></i></button>
-                            <button onclick="deleteLog(${origIdx})" class="text-slate-400 hover:text-rose-600 p-1" title="Устгах"><i class="fa-solid fa-trash-can"></i></button>
-                        </div>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
-                            <i class="fa-solid fa-location-dot text-indigo-500 text-xs"></i>
-                            <span>${log.location}</span>
-                            <span class="text-xs font-normal text-slate-500">(Няряд: ${log.orderNumber})</span>
-                        </h3>
-                        <p class="text-xs text-indigo-700 font-medium mt-1">✓ ${log.works.join(', ')}</p>
-                    </div>
-                    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-2 border-t border-slate-200 text-xs text-slate-500 gap-1">
-                        <span class="flex items-start space-x-1"><i class="fa-solid fa-users text-indigo-400 text-xs mt-0.5"></i><span><strong class="font-bold text-slate-800">Бригад:</strong> <span class="text-slate-600">${log.brigade.join('; ')}</span></span></span>
-                        <span class="text-indigo-600 font-bold whitespace-nowrap flex items-center space-x-1"><i class="fa-solid fa-hourglass-half text-[10px]"></i><span>Нийт: ${formatHoursAndMinutes(log.totalMinutes)}</span></span>
-                    </div>
-                `;
+if (log.timeRange && log.timeRange.includes('(')) {
+    // Жишээ нь: "2026-03-09 (13:55 - 14:09)" -> огноо болон цагийг салгах
+    const parts = log.timeRange.split('(');
+    dateOnly = parts[0].trim();
+    timeOnly = parts[1].replace(')', '').trim();
+} else if (log.startTime && log.endTime) {
+    timeOnly = `${log.startTime} - ${log.endTime}`;
+} else if (log.startTime) {
+    timeOnly = log.startTime;
+}
+
+const card = document.createElement('div');
+card.className = 'bg-slate-50 border border-slate-200 rounded-xl p-4 hover:border-indigo-300 transition space-y-2.5';
+card.innerHTML = `
+    <div class="flex flex-wrap items-center justify-between gap-2">
+        <!-- Огноо ба Цаг тусдаа Badge -->
+        <div class="flex items-center flex-wrap gap-1.5">
+            <span class="bg-indigo-600 text-white text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center space-x-1.5 shadow-sm">
+                <i class="fa-regular fa-calendar text-[11px]"></i>
+                <span>${dateOnly}</span>
+            </span>
+            ${timeOnly ? `
+            <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center space-x-1.5">
+                <i class="fa-regular fa-clock text-[11px] text-indigo-500"></i>
+                <span>${timeOnly}</span>
+            </span>` : ''}
+        </div>
+
+        <!-- Тод ялгарсан үйлдлийн товчлуурууд -->
+        <div class="flex items-center space-x-1.5">
+            <button onclick="editLog(${origIdx})" class="w-8 h-8 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 border border-amber-200/80 transition flex items-center justify-center shadow-xs" title="Засах">
+                <i class="fa-solid fa-pen-to-square text-xs"></i>
+            </button>
+            <button onclick="deleteLog(${origIdx})" class="w-8 h-8 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200/80 transition flex items-center justify-center shadow-xs" title="Устгах">
+                <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+        </div>
+    </div>
+    <div>
+        <h3 class="text-sm font-bold text-slate-900 flex items-center space-x-1.5">
+            <i class="fa-solid fa-location-dot text-indigo-500 text-xs"></i>
+            <span>${log.location}</span>
+            <span class="text-xs font-normal text-slate-500">(Няряд: ${log.orderNumber})</span>
+        </h3>
+        <p class="text-xs text-indigo-700 font-medium mt-1">✓ ${log.works.join(', ')}</p>
+    </div>
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-2 border-t border-slate-200 text-xs text-slate-500 gap-1">
+        <span class="flex items-start space-x-1">
+            <i class="fa-solid fa-users text-indigo-400 text-xs mt-0.5"></i>
+            <span><strong class="font-bold text-slate-800">Бригад:</strong> <span class="text-slate-600">${log.brigade.join('; ')}</span></span>
+        </span>
+        <span class="text-indigo-600 font-bold whitespace-nowrap flex items-center space-x-1">
+            <i class="fa-solid fa-hourglass-half text-[10px]"></i>
+            <span>Нийт: ${formatHoursAndMinutes(log.totalMinutes)}</span>
+        </span>
+    </div>
+`;
                 container.appendChild(card);
             });
 
