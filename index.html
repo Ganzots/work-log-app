@@ -871,7 +871,7 @@
                         <td class="p-2.5 font-medium text-slate-900">${idx + 1}</td>
                         <td class="p-2.5 font-medium text-slate-900">${log.location}</td>
                         <td class="p-2.5 text-slate-700">${log.orderNumber}</td>
-                        <td class="p-2.5 text-slate-600">${log.startDate}</td>
+                        <td class="p-2.5 text-slate-600">${log.timeRange || log.startDate}</td>
                         <td class="p-2.5 text-slate-700">${log.works.join(', ')}</td>
                         <td class="p-2.5 text-slate-600">${log.brigade.join('; ')}</td>
                         <td class="p-2.5 font-bold text-indigo-600">${formatHoursAndMinutes(log.totalMinutes)}</td>
