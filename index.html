@@ -255,10 +255,9 @@
                                 <span>Улсын комиссоор ажилласан.</span>
                             </label>
                             <div class="flex items-center space-x-2.5 pt-1">
-                                <input type="checkbox" id="otherWorkCheckbox" onchange="toggleOtherInput()" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4">
-                                <span class="text-sm text-slate-700 font-medium">Бусад:</span>
-                                <input type="text" id="otherWorkText" disabled placeholder="Бусад ажил бичих..." class="flex-grow px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs disabled:bg-slate-100">
-                            </div>
+    <input type="checkbox" id="otherWorkCheckbox" onchange="toggleOtherInput()" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 flex-shrink-0">
+    <input type="text" id="otherWorkText" disabled placeholder="Нэмэлт ажил бичих..." class="flex-grow px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-xs disabled:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+</div>
                         </div>
                     </div>
 
@@ -1049,8 +1048,8 @@
             const otherChecked = document.getElementById('otherWorkCheckbox').checked;
             const otherText = document.getElementById('otherWorkText').value.trim();
             if (otherChecked && otherText) {
-                selectedWorks.push("Бусад: " + otherText);
-            }
+    selectedWorks.push(otherText);
+}
 
             if (selectedWorks.length === 0) {
                 alert("Дор хаяж нэг хийгдсэн ажил сонгоно уу!");
@@ -1324,17 +1323,30 @@
                 cb.checked = works.includes(cb.value);
             });
 
-            const otherWorkItem = works.find(w => w.startsWith("Бусад: "));
-            if (otherWorkItem) {
-                document.getElementById('otherWorkCheckbox').checked = true;
-                const textInput = document.getElementById('otherWorkText');
-                textInput.disabled = false;
-                textInput.value = otherWorkItem.replace("Бусад: ", "");
-            } else {
-                document.getElementById('otherWorkCheckbox').checked = false;
-                document.getElementById('otherWorkText').disabled = true;
-                document.getElementById('otherWorkText').value = "";
-            }
+           const defaultWorkOptions = [
+    "Үзлэг, үйлчилгээ хийв.",
+    "Тоног төхөөрөмж сольж суурилуулсан.",
+    "Үндсэн хөрөнгийн тооллого хийсэн.",
+    "Үл тохирол арилгав.",
+    "Панелиудын бохирдлыг цэвэрлэж, тоосыг соруулав.",
+    "Төхөөрөмжийн тохиргооны файлыг хуулж авч, архивлав.",
+    "Техникийн комиссоор ажилласан.",
+    "Улсын комиссоор ажилласан."
+];
+
+const otherWorkItem = works.find(w => !defaultWorkOptions.includes(w) && !w.startsWith("Бусад: ")) || 
+                      works.find(w => w.startsWith("Бусад: "));
+
+if (otherWorkItem) {
+    document.getElementById('otherWorkCheckbox').checked = true;
+    const textInput = document.getElementById('otherWorkText');
+    textInput.disabled = false;
+    textInput.value = otherWorkItem.replace(/^Бусад:\s*/, "");
+} else {
+    document.getElementById('otherWorkCheckbox').checked = false;
+    document.getElementById('otherWorkText').disabled = true;
+    document.getElementById('otherWorkText').value = "";
+}
 
             populateBrigadeDropdown(log.brigade);
 
