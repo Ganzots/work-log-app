@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Аналитик Дашбоард - Төв диспетчерийн алба (ТХХэсэг)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+            .print-card { box-shadow: none !important; border: 1px solid #e2e8f0 !important; break-inside: avoid; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between antialiased">
+
+    <div>
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <a href="index.html" class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition" title="Бүртгэл рүү буцах">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </a>
+                    <div class="bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white p-2.5 rounded-xl shadow-md shadow-indigo-100 flex items-center justify-center">
+                        <i class="fa-solid fa-chart-line text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight flex items-center space-x-2">
+                            <span>Ажлын Гүйцэтгэлийн Аналитик Дашбоард</span>
+                        </h1>
+                        <p class="text-xs text-slate-500">ДҮТ ТӨХК • Төв диспетчерийн алба • ТХХэсэг</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2 sm:space-x-3 no-print">
+                    <button onclick="fetchData()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5" title="Өгөгдөл шинэчлэх">
+                        <i id="syncIcon" class="fa-solid fa-rotate"></i>
+                        <span class="hidden sm:inline">Шинэчлэх</span>
+                    </button>
+                    <button onclick="exportToCSV()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5">
+                        <i class="fa-solid fa-file-excel text-emerald-600"></i>
+                        <span class="hidden sm:inline">Excel (CSV)</span>
+                    </button>
+                    <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition shadow-sm shadow-indigo-100 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-print"></i>
+                        <span>Хэвлэх</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+            <!-- Filter Controls -->
+            <section class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-wrap items-center justify-between gap-4 no-print">
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-filter text-indigo-500"></i> Шүүлтүүр:
+                    </span>
+                    <div class="flex items-center space-x-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5">
+                        <span class="text-[11px] text-slate-400 font-medium">Эхлэх:</span>
+                        <input type="date" id="filterStartDate" onchange="applyFilters()" class="bg-transparent text-xs text-slate-700 focus:outline-none font-medium">
+                    </div>
+                    <div class="flex items-center space-x-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5">
+                        <span class="text-[11px] text-slate-400 font-medium">Дуусах:</span>
+                        <input type="date" id="filterEndDate" onchange="applyFilters()" class="bg-transparent text-xs text-slate-700 focus:outline-none font-medium">
+                    </div>
+                    <select id="filterLocation" onchange="applyFilters()" class="bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-700 focus:outline-none font-medium">
+                        <option value="">Бүх байршил</option>
+                    </select>
+                </div>
+                <button onclick="resetFilters()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold transition">
+                    Шүүлтүүр цэвэрлэх
+                </button>
+            </section>
+
+            <!-- 5 KPI Cards -->
+            <section class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs print-card">
+                    <div class="flex items-center justify-between text-indigo-600 mb-2">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Нийт ажил</span>
+                        <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center"><i class="fa-solid fa-list-check text-sm"></i></div>
+                    </div>
+                    <div id="kpiTotalLogs" class="text-2xl font-black text-slate-900 tracking-tight">0</div>
+                    <p class="text-[11px] text-slate-400 mt-1">Бүртгэгдсэн ажлын тоо</p>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs print-card">
+                    <div class="flex items-center justify-between text-indigo-600 mb-2">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Нийт хугацаа</span>
+                        <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center"><i class="fa-regular fa-clock text-sm"></i></div>
+                    </div>
+                    <div id="kpiTotalHours" class="text-xl sm:text-2xl font-black text-indigo-600 tracking-tight">0ц 0м</div>
+                    <p class="text-[11px] text-slate-400 mt-1">Үргэлжилсэн нийт цаг</p>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs print-card">
+                    <div class="flex items-center justify-between text-emerald-600 mb-2">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Хүн-Цаг</span>
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center"><i class="fa-solid fa-people-arrows text-sm"></i></div>
+                    </div>
+                    <div id="kpiTotalManHours" class="text-xl sm:text-2xl font-black text-emerald-600 tracking-tight">0ц</div>
+                    <p class="text-[11px] text-slate-400 mt-1">Хөдөлмөр зарцуулалт</p>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs print-card">
+                    <div class="flex items-center justify-between text-amber-600 mb-2">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Байршил</span>
+                        <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center"><i class="fa-solid fa-location-dot text-sm"></i></div>
+                    </div>
+                    <div id="kpiLocationsCount" class="text-2xl font-black text-slate-900 tracking-tight">0</div>
+                    <p class="text-[11px] text-slate-400 mt-1">Очсон дэд станцууд</p>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs print-card col-span-2 lg:col-span-1">
+                    <div class="flex items-center justify-between text-violet-600 mb-2">
+                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Хамрагдсан</span>
+                        <div class="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center"><i class="fa-solid fa-user-group text-sm"></i></div>
+                    </div>
+                    <div id="kpiStaffCount" class="text-2xl font-black text-slate-900 tracking-tight">0</div>
+                    <p class="text-[11px] text-slate-400 mt-1">Ажилласан инженерүүд</p>
+                </div>
+            </section>
+
+            <!-- Charts Grid (2 Rows) -->
+            <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Top Locations Chart -->
+                <div class="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-5 shadow-xs print-card flex flex-col justify-between">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-indigo-500"></i> Хамгийн их ажил хийгдсэн байршлууд
+                        </h3>
+                        <span class="text-[11px] text-slate-400 font-medium">Ажлын тоогоор</span>
+                    </div>
+                    <div class="h-64 sm:h-72 w-full">
+                        <canvas id="locationChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Work Types Distribution Chart -->
+                <div class="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-5 shadow-xs print-card flex flex-col justify-between">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-pie text-emerald-500"></i> Хийгдсэн ажлын бүтэц
+                        </h3>
+                        <span class="text-[11px] text-slate-400 font-medium">Эзлэх хувь</span>
+                    </div>
+                    <div class="h-64 sm:h-72 w-full flex items-center justify-center">
+                        <canvas id="workTypeChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Staff Hours Bar Chart -->
+                <div class="lg:col-span-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-xs print-card flex flex-col justify-between">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-id-badge text-amber-500"></i> Инженерүүдийн ажилласан нийт цаг
+                        </h3>
+                        <span class="text-[11px] text-slate-400 font-medium">Хүн-цагаар</span>
+                    </div>
+                    <div class="h-64 sm:h-72 w-full">
+                        <canvas id="staffHoursChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Timeline Load Dynamic Chart -->
+                <div class="lg:col-span-6 bg-white border border-slate-200 rounded-2xl p-5 shadow-xs print-card flex flex-col justify-between">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-indigo-500"></i> Ажлын цагийн хуваарилалт (Өдрөөр)
+                        </h3>
+                        <span class="text-[11px] text-slate-400 font-medium">Нийт цаг</span>
+                    </div>
+                    <div class="h-64 sm:h-72 w-full">
+                        <canvas id="timelineChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Detailed Staff Performance Table -->
+            <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs print-card">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                    <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-users-gear text-indigo-600"></i> Инженерүүдийн ажлын ачааллын тайлан
+                    </h3>
+                    <span id="staffTableCount" class="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-full">0 инженер</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 font-bold uppercase tracking-wider border-b border-slate-200">
+                                <th class="p-3 w-10 text-center">№</th>
+                                <th class="p-3">Инженерийн нэр</th>
+                                <th class="p-3">Албан тушаал</th>
+                                <th class="p-3 text-center">Оролцсон ажлын тоо</th>
+                                <th class="p-3 text-right">Зарцуулсан нийт цаг</th>
+                                <th class="p-3 text-right">Хувь оролцоо</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staffTableBody" class="divide-y divide-slate-100">
+                            <!-- Dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-8 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>© 2026 Диспетчерийн үндэсний төв ТӨХК. Бүх эрх хуулиар хамгаалагдсан.</p>
+            <p class="text-slate-400">Технологи, холбооны хэсэг • Аналитик модуль</p>
+        </div>
+    </footer>
+
+    <!-- Logic -->
+    <script>
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEh7SJQ_kVkp4s076GKZb3i9AvShZI6oWXU8vKjVBLG4vdMzg0d5algemm-MNUOF7g/exec";
+
+        let allLogs = [];
+        let filteredLogs = [];
+
+        let chartLocation = null;
+        let chartWorkType = null;
+        let chartStaff = null;
+        let chartTimeline = null;
+
+        window.onload = function() {
+            fetchData();
+        };
+
+        function fetchData() {
+            const icon = document.getElementById('syncIcon');
+            icon.classList.add('fa-spin');
+
+            fetch(`${GOOGLE_SCRIPT_URL}?action=get`)
+                .then(res => res.json())
+                .then(data => {
+                    allLogs = data.map(log => ({
+                        ...log,
+                        startDate: formatDate(log.startDate),
+                        endDate: formatDate(log.endDate),
+                        totalMinutes: Number(log.totalMinutes) || parseMinutesFromText(log.totalHours)
+                    }));
+                    initFilterDropdowns();
+                    applyFilters();
+                    icon.classList.remove('fa-spin');
+                })
+                .catch(err => {
+                    console.error("Дата татахад алдаа гарлаа:", err);
+                    icon.classList.remove('fa-spin');
+                });
+        }
+
+        function formatDate(d) {
+            if (!d) return '';
+            return d.includes('T') ? d.split('T')[0] : d;
+        }
+
+        function parseMinutesFromText(txt) {
+            if (!txt) return 0;
+            let mins = 0;
+            const h = txt.match(/(\d+)\s*цаг/);
+            const m = txt.match(/(\d+)\s*минут/);
+            if (h) mins += parseInt(h[1]) * 60;
+            if (m) mins += parseInt(m[1]);
+            return mins;
+        }
+
+        function formatMins(m) {
+            const hrs = Math.floor(m / 60);
+            const mins = m % 60;
+            return mins === 0 ? `${hrs}ц` : `${hrs}ц ${mins}м`;
+        }
+
+        function initFilterDropdowns() {
+            const locSelect = document.getElementById('filterLocation');
+            const locs = [...new Set(allLogs.map(l => l.location).filter(Boolean))];
+            locSelect.innerHTML = `<option value="">Бүх байршил</option>` + locs.map(l => `<option value="${l}">${l}</option>`).join('');
+        }
+
+        function resetFilters() {
+            document.getElementById('filterStartDate').value = '';
+            document.getElementById('filterEndDate').value = '';
+            document.getElementById('filterLocation').value = '';
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const start = document.getElementById('filterStartDate').value;
+            const end = document.getElementById('filterEndDate').value;
+            const loc = document.getElementById('filterLocation').value;
+
+            filteredLogs = allLogs.filter(log => {
+                const matchesLoc = !loc || log.location === loc;
+                let matchesDate = true;
+                if (start && end) {
+                    matchesDate = log.startDate <= end && log.startDate >= start;
+                } else if (start) {
+                    matchesDate = log.startDate >= start;
+                } else if (end) {
+                    matchesDate = log.startDate <= end;
+                }
+                return matchesLoc && matchesDate;
+            });
+
+            renderKPIs();
+            renderCharts();
+            renderStaffTable();
+        }
+
+        function renderKPIs() {
+            document.getElementById('kpiTotalLogs').innerText = filteredLogs.length;
+
+            const sumMins = filteredLogs.reduce((acc, l) => acc + (l.totalMinutes || 0), 0);
+            document.getElementById('kpiTotalHours').innerText = formatMins(sumMins);
+
+            let totalManMinutes = 0;
+            const uniqueStaff = new Set();
+            const uniqueLocations = new Set();
+
+            filteredLogs.forEach(l => {
+                if (l.location) uniqueLocations.add(l.location);
+                const staffList = Array.isArray(l.brigade) ? l.brigade : (l.brigade ? l.brigade.split(';') : []);
+                staffList.forEach(s => {
+                    const name = s.trim().split(' (')[0];
+                    if (name) uniqueStaff.add(name);
+                });
+                totalManMinutes += (l.totalMinutes || 0) * (staffList.length || 1);
+            });
+
+            document.getElementById('kpiTotalManHours').innerText = `${Math.round(totalManMinutes / 60)}ц`;
+            document.getElementById('kpiLocationsCount').innerText = uniqueLocations.size;
+            document.getElementById('kpiStaffCount').innerText = uniqueStaff.size;
+        }
+
+        function renderCharts() {
+            // 1. Location Bar Chart
+            const locCount = {};
+            filteredLogs.forEach(l => {
+                if (l.location) locCount[l.location] = (locCount[l.location] || 0) + 1;
+            });
+            const topLocs = Object.entries(locCount).sort((a,b) => b[1] - a[1]).slice(0, 7);
+
+            if (chartLocation) chartLocation.destroy();
+            chartLocation = new Chart(document.getElementById('locationChart'), {
+                type: 'bar',
+                data: {
+                    labels: topLocs.map(i => i[0]),
+                    datasets: [{
+                        label: 'Ажлын тоо',
+                        data: topLocs.map(i => i[1]),
+                        backgroundColor: '#4f46e5',
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+                }
+            });
+
+            // 2. Work Types Doughnut Chart
+            const workTypeCount = {};
+            filteredLogs.forEach(l => {
+                const works = Array.isArray(l.works) ? l.works : (l.works ? l.works.split(',') : []);
+                works.forEach(w => {
+                    let key = w.trim().replace(/^•\s*/, '');
+                    if (key.startsWith('Бусад:')) key = 'Бусад ажил';
+                    if (key) workTypeCount[key] = (workTypeCount[key] || 0) + 1;
+                });
+            });
+
+            const topWorks = Object.entries(workTypeCount).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            if (chartWorkType) chartWorkType.destroy();
+            chartWorkType = new Chart(document.getElementById('workTypeChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: topWorks.map(i => i[0].length > 25 ? i[0].slice(0,25)+'...' : i[0]),
+                    datasets: [{
+                        data: topWorks.map(i => i[1]),
+                        backgroundColor: ['#4f46e5', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } }
+                }
+            });
+
+            // 3. Staff Hours Horizontal Bar
+            const staffMinutes = {};
+            filteredLogs.forEach(l => {
+                const staffList = Array.isArray(l.brigade) ? l.brigade : (l.brigade ? l.brigade.split(';') : []);
+                staffList.forEach(s => {
+                    const name = s.trim().split(' (')[0];
+                    if (name) staffMinutes[name] = (staffMinutes[name] || 0) + (l.totalMinutes || 0);
+                });
+            });
+            const topStaff = Object.entries(staffMinutes).sort((a,b) => b[1] - a[1]).slice(0, 6);
+
+            if (chartStaff) chartStaff.destroy();
+            chartStaff = new Chart(document.getElementById('staffHoursChart'), {
+                type: 'bar',
+                indexAxis: 'y',
+                data: {
+                    labels: topStaff.map(i => i[0]),
+                    datasets: [{
+                        label: 'Цаг',
+                        data: topStaff.map(i => +(i[1] / 60).toFixed(1)),
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true } }
+                }
+            });
+
+            // 4. Timeline Line Chart
+            const dateMap = {};
+            filteredLogs.forEach(l => {
+                if (l.startDate) dateMap[l.startDate] = (dateMap[l.startDate] || 0) + ((l.totalMinutes || 0) / 60);
+            });
+            const sortedDates = Object.entries(dateMap).sort((a,b) => a[0].localeCompare(b[0]));
+
+            if (chartTimeline) chartTimeline.destroy();
+            chartTimeline = new Chart(document.getElementById('timelineChart'), {
+                type: 'line',
+                data: {
+                    labels: sortedDates.map(i => i[0]),
+                    datasets: [{
+                        label: 'Нийт ажилласан цаг',
+                        data: sortedDates.map(i => +i[1].toFixed(1)),
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function renderStaffTable() {
+            const staffData = {};
+            let totalAllMinutes = 0;
+
+            filteredLogs.forEach(l => {
+                const staffList = Array.isArray(l.brigade) ? l.brigade : (l.brigade ? l.brigade.split(';') : []);
+                staffList.forEach(s => {
+                    const clean = s.trim();
+                    const name = clean.split(' (')[0];
+                    const role = clean.includes('(') ? clean.split('(')[1].replace(')', '') : 'Инженер';
+                    if (!name) return;
+
+                    if (!staffData[name]) {
+                        staffData[name] = { name, role, count: 0, minutes: 0 };
+                    }
+                    staffData[name].count += 1;
+                    staffData[name].minutes += (l.totalMinutes || 0);
+                    totalAllMinutes += (l.totalMinutes || 0);
+                });
+            });
+
+            const staffList = Object.values(staffData).sort((a,b) => b.minutes - a.minutes);
+            document.getElementById('staffTableCount').innerText = `${staffList.length} инженер`;
+
+            const tbody = document.getElementById('staffTableBody');
+            tbody.innerHTML = '';
+
+            staffList.forEach((s, idx) => {
+                const pct = totalAllMinutes > 0 ? ((s.minutes / totalAllMinutes) * 100).toFixed(1) : 0;
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="p-3 text-center text-slate-400 font-medium">${idx + 1}</td>
+                    <td class="p-3 font-bold text-slate-900">${s.name}</td>
+                    <td class="p-3 text-slate-500">${s.role}</td>
+                    <td class="p-3 text-center"><span class="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md font-semibold">${s.count} удаа</span></td>
+                    <td class="p-3 text-right font-bold text-slate-800">${formatMins(s.minutes)}</td>
+                    <td class="p-3 text-right">
+                        <span class="inline-block w-12 text-slate-600 font-semibold">${pct}%</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function exportToCSV() {
+            let csv = "Дугаар,Байршил,Няряд,Эхлэх огноо,Ажилласан хугацаа,Хийгдсэн ажил,Бригадын бүрэлдэхүүн\n";
+            filteredLogs.forEach((l, i) => {
+                const works = Array.isArray(l.works) ? l.works.join('; ') : l.works;
+                const brigade = Array.isArray(l.brigade) ? l.brigade.join('; ') : l.brigade;
+                csv += `"${i+1}","${l.location}","${l.orderNumber}","${l.startDate}","${formatMins(l.totalMinutes)}","${works}","${brigade}"\n`;
+            });
+
+            const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Тайлан_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+    </script>
+</body>
+</html>
