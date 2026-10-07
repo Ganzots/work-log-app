@@ -9,7 +9,7 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         @media print {
             body * { visibility: hidden; }
@@ -24,10 +24,9 @@
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between antialiased" onclick="closeDropdownOutside(event)">
 
-   <!-- LOGIN MODAL -->
+    <!-- LOGIN MODAL -->
     <div id="loginModal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300">
         <div class="relative bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-[420px] p-7 sm:p-9 overflow-hidden">
-            <!-- Дээд талын гоёлын зураас -->
             <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500"></div>
 
             <div class="text-center space-y-3 mb-7">
@@ -40,7 +39,6 @@
             </div>
 
             <form onsubmit="handleLogin(event)" class="space-y-4">
-                <!-- Хэрэглэгч сонгох -->
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Инженер / Ажилтан</label>
                     <div class="relative">
@@ -53,7 +51,6 @@
                     </div>
                 </div>
 
-                <!-- Нууц үг -->
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Нэвтрэх нууц үг</label>
                     <div class="relative">
@@ -67,13 +64,11 @@
                     </div>
                 </div>
 
-                <!-- Алдааны мессеж -->
                 <div id="loginErrorMsg" class="hidden text-xs text-rose-600 bg-rose-50 border border-rose-200/80 p-3 rounded-xl flex items-center space-x-2 font-medium">
                     <i class="fa-solid fa-circle-exclamation text-rose-500"></i>
                     <span>Нууц үг тохирохгүй байна. Дахин оролдоно уу.</span>
                 </div>
 
-                <!-- Нэвтрэх товчлуур -->
                 <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition shadow-lg shadow-indigo-200 flex items-center justify-center space-x-2 active:scale-[0.99]">
                     <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
                     <span>Системд нэвтрэх</span>
@@ -88,6 +83,7 @@
             </div>
         </div>
     </div>
+
     <!-- MAIN APP CONTAINER -->
     <div>
         <!-- Header -->
@@ -118,6 +114,12 @@
                             Гарах
                         </button>
                     </div>
+
+                    <!-- Админд л харагдах Хэрэглэгчийн Удирдлага товч -->
+                    <button id="adminUsersBtn" onclick="openUserManagerModal()" class="hidden bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 shadow-xs" title="Хэрэглэгчдийг удирдах">
+                        <i class="fa-solid fa-users-gear text-purple-600"></i>
+                        <span class="hidden md:inline">Хэрэглэгчийн удирдлага</span>
+                    </button>
 
                     <!-- Шинэчлэх товч -->
                     <button onclick="fetchLogsFromSheet()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl text-xs font-medium transition flex items-center space-x-1.5" title="Дата шинэчлэх">
@@ -393,6 +395,97 @@
         </div>
     </footer>
 
+    <!-- ADMIN USER MANAGEMENT MODAL -->
+    <div id="userManagerModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl border border-slate-100 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50">
+                <div class="flex items-center space-x-2 text-purple-700">
+                    <i class="fa-solid fa-users-gear text-lg"></i>
+                    <h3 class="text-base font-bold text-slate-900">Инженер, ажилтнуудын хандалтын удирдлага</h3>
+                </div>
+                <button onclick="closeUserManagerModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-6 flex-grow">
+                <!-- Add / Edit User Form -->
+                <div class="bg-purple-50/60 border border-purple-100 rounded-2xl p-5">
+                    <h4 id="userFormTitle" class="text-xs font-bold text-purple-900 uppercase tracking-wider mb-3 flex items-center space-x-1.5">
+                        <i class="fa-solid fa-user-plus text-purple-600"></i>
+                        <span>Шинэ хэрэглэгч нэмэх</span>
+                    </h4>
+                    <form id="userAdminForm" onsubmit="handleUserFormSubmit(event)" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Нэвтрэх нэр (Username) *</label>
+                            <input type="text" id="adminUserUsername" required placeholder="жишээ: batkhuu" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Бүтэн нэр *</label>
+                            <input type="text" id="adminUserName" required placeholder="жишээ: Б.Батхүү" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Нэвтрэх нууц үг *</label>
+                            <input type="text" id="adminUserPass" required placeholder="Нууц үг оруулна уу" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Албан тушаал</label>
+                            <input type="text" id="adminUserPosition" placeholder="Холбооны инженер..." class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-600 uppercase mb-1">Системийн эрх *</label>
+                            <select id="adminUserRole" required class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                                <option value="user">Хэрэглэгч (User - зөвхөн өөрийнхийг засна)</option>
+                                <option value="admin">Админ (Admin - бүгдийг засна)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end space-x-2">
+                            <button type="submit" id="adminUserSaveBtn" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-3 rounded-xl text-xs transition shadow-sm flex items-center justify-center space-x-1.5 h-[35px]">
+                                <i class="fa-solid fa-check"></i>
+                                <span>Хадгалах</span>
+                            </button>
+                            <button type="button" id="adminUserCancelBtn" onclick="resetUserAdminForm()" class="hidden bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-3 rounded-xl text-xs transition h-[35px]">
+                                Болих
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Users List Table -->
+                <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+                    <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-700 uppercase">Бүртгэлтэй инженерүүдийн жагсаалт</span>
+                        <span id="userCountBadge" class="text-[11px] bg-white border border-slate-200 px-2 py-0.5 rounded-md font-semibold text-slate-600">0 ажилтан</span>
+                    </div>
+                    <div class="overflow-x-auto max-h-72 overflow-y-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100/75 text-slate-600 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                    <th class="p-3 w-10 text-center">№</th>
+                                    <th class="p-3">Нэр</th>
+                                    <th class="p-3">Нэвтрэх нэр</th>
+                                    <th class="p-3">Нууц үг</th>
+                                    <th class="p-3">Албан тушаал</th>
+                                    <th class="p-3 text-center">Эрх</th>
+                                    <th class="p-3 text-right w-24">Үйлдэл</th>
+                                </tr>
+                            </thead>
+                            <tbody id="userListTableBody" class="divide-y divide-slate-100">
+                                <!-- Dynamic user rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-end">
+                <button onclick="closeUserManagerModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-xl text-xs font-semibold transition">
+                    Хаах
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Report Modal -->
     <div id="reportModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
@@ -487,56 +580,77 @@
     <script>
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxDqxUsI07eMWhF4FSqKJ2Fr_g5GHr02ibzPi-SsyqSWn9eo7QQ4Ldf_g8xtplURNAy/exec";
 
-// ХЭРЭГЛЭГЧДИЙН ЖАГСААЛТ БА ЭРХ
-        const USERS = [
-            { username: "ganzorig", name: "Ц.Ганзориг", pass: "1234", role: "admin" }, // Админ эрхтэй
-            { username: "enkhbayasgalan", name: "М.Энхбаясгалан", pass: "1234", role: "user" },
-            { username: "gereltod", name: "Г.Гэрэлт-Од", pass: "1234", role: "user" },
-            { username: "battumur", name: "Д.Баттөмөр", pass: "1234", role: "user" },
-            { username: "anar", name: "Н.Анар", pass: "1234", role: "user" },
-            { username: "batkhuu", name: "Б.Батхүү", pass: "1234", role: "user" },
-            { username: "byambadorj", name: "О.Бямбадорж", pass: "1234", role: "user" },
-            { username: "davaanyam", name: "Б.Давааням", pass: "1234", role: "user" },
-            { username: "natsagdorj", name: "Д.Нацагдорж", pass: "1234", role: "user" }
+        // ХЭРЭГЛЭГЧДИЙН ЭХНИЙ DEFAULT ЖАГСААЛТ (Google Sheets-ээс автоматаар шинэчлэгдэнэ)
+        let USERS = [
+            { username: "ganzorig", name: "Ц.Ганзориг", pass: "1234", role: "admin", position: "Тоолуурын нэгдсэн системийн инженер" },
+            { username: "enkhbayasgalan", name: "М.Энхбаясгалан", pass: "1234", role: "user", position: "Электроникийн инженер" },
+            { username: "gereltod", name: "Г.Гэрэлт-Од", pass: "1234", role: "user", position: "Холбооны инженер" },
+            { username: "battumur", name: "Д.Баттөмөр", pass: "1234", role: "user", position: "Шилэн кабелийн инженер" },
+            { username: "anar", name: "Н.Анар", pass: "1234", role: "user", position: "Хяналт мэдээллийн системийн инженер" },
+            { username: "batkhuu", name: "Б.Батхүү", pass: "1234", role: "user", position: "Хяналт мэдээллийн системийн инженер" },
+            { username: "byambadorj", name: "О.Бямбадорж", pass: "1234", role: "user", position: "Хяналт мэдээллийн системийн инженер" },
+            { username: "davaanyam", name: "Б.Давааням", pass: "1234", role: "user", position: "Хяналт мэдээллийн системийн инженер" },
+            { username: "natsagdorj", name: "Д.Нацагдорж", pass: "1234", role: "user", position: "Технологийн холбооны хэсгийн ахлах инженер" }
         ];
 
         let currentUser = null;
-
-        const brigadeStaffList = [
-            { name: "Ц.Ганзориг", role: "Тоолуурын нэгдсэн системийн инженер" },
-            { name: "М.Энхбаясгалан", role: "Электроникийн инженер" },
-            { name: "Г.Гэрэлт-Од", role: "Холбооны инженер" },
-            { name: "Д.Баттөмөр", role: "Шилэн кабелийн инженер" },
-            { name: "Н.Анар", role: "Хяналт мэдээллийн системийн инженер" },
-            { name: "Б.Батхүү", role: "Хяналт мэдээллийн системийн инженер" },
-            { name: "О.Бямбадорж", role: "Хяналт мэдээллийн системийн инженер" },
-            { name: "Б.Давааням", role: "Хяналт мэдээллийн системийн инженер" },
-            { name: "Д.Нацагдорж", role: "Технологийн холбооны хэсгийн ахлах инженер" }
-        ];
-
         let workLogs = [];
         let currentPage = 1;
         const itemsPerPage = 4;
 
         window.onload = function() {
-            populateLoginUserSelect(); // 1. Эхлээд хэрэглэгчийн жагсаалтаа сонгох талбарт дүүргэнэ
-            checkAuth();               // 2. Өмнө нь нэвтэрсэн эсэхийг шалгана
+            populateLoginUserSelect();
+            checkAuth();
             populateBrigadeDropdown();
             setDefaultDates();
-            fetchLogsFromSheet();
+            fetchUsersFromSheet(); // Хэрэглэгчдийг хүснэгтээс татах
+            fetchLogsFromSheet();  // Ажлын тэмдэглэлийг татах
         };
+
+        // --- FETCH USERS FROM GOOGLE SHEETS ---
+        function fetchUsersFromSheet() {
+            fetch(`${GOOGLE_SCRIPT_URL}?action=getUsers`)
+                .then(res => res.json())
+                .then(data => {
+                    if (Array.isArray(data) && data.length > 0) {
+                        USERS = data;
+                        populateLoginUserSelect();
+                        populateBrigadeDropdown();
+                        if (currentUser) {
+                            const updatedMe = USERS.find(u => u.username === currentUser.username);
+                            if (updatedMe) {
+                                currentUser = updatedMe;
+                                sessionStorage.setItem('currentUser', JSON.stringify(updatedMe));
+                            }
+                        }
+                    }
+                })
+                .catch(err => console.log("Хэрэглэгчийн өгөгдлийг одоогоор түр санах ойгоос ашиглаж байна"));
+        }
 
         // --- AUTH LOGIC ---
         function checkAuth() {
             const saved = sessionStorage.getItem('currentUser');
             const modal = document.getElementById('loginModal');
+            const adminBtn = document.getElementById('adminUsersBtn');
+
             if (saved) {
                 currentUser = JSON.parse(saved);
                 if (modal) modal.classList.add('hidden');
                 const headerName = document.getElementById('headerUserName');
                 if (headerName) headerName.innerText = currentUser.name + (currentUser.role === 'admin' ? ' (Админ)' : '');
+                
+                // Зөвхөн Админ бол "Хэрэглэгчийн удирдлага" товчийг харуулна
+                if (adminBtn) {
+                    if (currentUser.role === 'admin') {
+                        adminBtn.classList.remove('hidden');
+                    } else {
+                        adminBtn.classList.add('hidden');
+                    }
+                }
             } else {
                 if (modal) modal.classList.remove('hidden');
+                if (adminBtn) adminBtn.classList.add('hidden');
             }
         }
 
@@ -557,8 +671,10 @@
         function populateLoginUserSelect() {
             const select = document.getElementById('loginUserSelect');
             if (!select) return;
+            const currentVal = select.value;
             select.innerHTML = '<option value="">Нэрээ сонгоно уу...</option>' + 
                 USERS.map(u => `<option value="${u.username}">${u.name} ${u.role === 'admin' ? '(Админ)' : ''}</option>`).join('');
+            if (currentVal) select.value = currentVal;
         }
 
         function handleLogin(event) {
@@ -572,9 +688,14 @@
                 currentUser = found;
                 sessionStorage.setItem('currentUser', JSON.stringify(found));
                 document.getElementById('loginModal').classList.add('hidden');
-                const headerName = document.getElementById('headerUserName');
-                if (headerName) headerName.innerText = currentUser.name + (currentUser.role === 'admin' ? ' (Админ)' : '');
+                document.getElementById('headerUserName').innerText = currentUser.name + (currentUser.role === 'admin' ? ' (Админ)' : '');
                 if (errorMsg) errorMsg.classList.add('hidden');
+                
+                const adminBtn = document.getElementById('adminUsersBtn');
+                if (adminBtn && currentUser.role === 'admin') {
+                    adminBtn.classList.remove('hidden');
+                }
+
                 renderLogs();
             } else {
                 if (errorMsg) errorMsg.classList.remove('hidden');
@@ -587,13 +708,186 @@
                 currentUser = null;
                 const passInput = document.getElementById('loginPassword');
                 if (passInput) passInput.value = '';
-                const modal = document.getElementById('loginModal');
-                if (modal) modal.classList.remove('hidden');
+                document.getElementById('loginModal').classList.remove('hidden');
+                const adminBtn = document.getElementById('adminUsersBtn');
+                if (adminBtn) adminBtn.classList.add('hidden');
                 populateLoginUserSelect();
                 renderLogs();
             }
         }
 
+        // --- USER MANAGEMENT (ADMIN PANEL) ---
+        function openUserManagerModal() {
+            if (!currentUser || currentUser.role !== 'admin') {
+                alert("Зөвхөн админ хандах эрхтэй!");
+                return;
+            }
+            renderUserTable();
+            document.getElementById('userManagerModal').classList.remove('hidden');
+        }
+
+        function closeUserManagerModal() {
+            document.getElementById('userManagerModal').classList.add('hidden');
+            resetUserAdminForm();
+        }
+
+        function renderUserTable() {
+            const tbody = document.getElementById('userListTableBody');
+            const countBadge = document.getElementById('userCountBadge');
+            tbody.innerHTML = '';
+            countBadge.innerText = `${USERS.length} ажилтан`;
+
+            USERS.forEach((u, i) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+                tr.innerHTML = `
+                    <td class="p-3 text-center text-slate-400 font-medium">${i + 1}</td>
+                    <td class="p-3 font-bold text-slate-900">${u.name}</td>
+                    <td class="p-3 font-mono text-indigo-600">${u.username}</td>
+                    <td class="p-3 font-mono text-slate-500">${u.pass}</td>
+                    <td class="p-3 text-slate-600">${u.position || '-'}</td>
+                    <td class="p-3 text-center">
+                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-700'}">
+                            ${u.role === 'admin' ? 'Админ' : 'Хэрэглэгч'}
+                        </span>
+                    </td>
+                    <td class="p-3 text-right whitespace-nowrap">
+                        <button onclick="editUser('${u.username}')" class="text-amber-600 hover:text-amber-800 p-1 mr-1" title="Засах / Нууц үг солих">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                        ${u.username !== currentUser.username ? `
+                        <button onclick="deleteUser('${u.username}')" class="text-rose-500 hover:text-rose-700 p-1" title="Устгах">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function editUser(username) {
+            const u = USERS.find(item => item.username === username);
+            if (!u) return;
+            document.getElementById('adminUserUsername').value = u.username;
+            document.getElementById('adminUserUsername').disabled = true; // Username солихгүй
+            document.getElementById('adminUserName').value = u.name;
+            document.getElementById('adminUserPass').value = u.pass;
+            document.getElementById('adminUserPosition').value = u.position || '';
+            document.getElementById('adminUserRole').value = u.role || 'user';
+
+            document.getElementById('userFormTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-purple-600"></i><span>Хэрэглэгчийн мэдээлэл засах</span>`;
+            document.getElementById('adminUserCancelBtn').classList.remove('hidden');
+        }
+
+        function resetUserAdminForm() {
+            document.getElementById('userAdminForm').reset();
+            const uInput = document.getElementById('adminUserUsername');
+            uInput.disabled = false;
+            document.getElementById('userFormTitle').innerHTML = `<i class="fa-solid fa-user-plus text-purple-600"></i><span>Шинэ хэрэглэгч нэмэх</span>`;
+            document.getElementById('adminUserCancelBtn').classList.add('hidden');
+        }
+
+        function handleUserFormSubmit(event) {
+            event.preventDefault();
+            const username = document.getElementById('adminUserUsername').value.trim().toLowerCase();
+            const name = document.getElementById('adminUserName').value.trim();
+            const pass = document.getElementById('adminUserPass').value.trim();
+            const position = document.getElementById('adminUserPosition').value.trim();
+            const role = document.getElementById('adminUserRole').value;
+
+            const existingIdx = USERS.findIndex(u => u.username === username);
+            const userObj = { username, name, pass, position, role };
+
+            if (existingIdx >= 0) {
+                USERS[existingIdx] = userObj;
+            } else {
+                USERS.push(userObj);
+            }
+
+            renderUserTable();
+            populateLoginUserSelect();
+            populateBrigadeDropdown();
+
+            // Google Sheets рүү хадгалах
+            const params = new URLSearchParams({
+                action: 'saveUser',
+                username: username,
+                name: name,
+                pass: pass,
+                position: position,
+                role: role
+            });
+
+            fetch(`${GOOGLE_SCRIPT_URL}?${params.toString()}`, { method: 'GET', mode: 'no-cors' })
+                .then(() => console.log("Хэрэглэгч амжилттай Sheets-д хадгалагдлаа"))
+                .catch(err => console.error("Sheets хадгалахад алдаа:", err));
+
+            alert("Хэрэглэгчийн мэдээлэл амжилттай шинэчлэгдлээ!");
+            resetUserAdminForm();
+        }
+
+        function deleteUser(username) {
+            if (confirm(`'${username}' хэрэглэгчийг системээс хасахдаа итгэлтэй байна уу?`)) {
+                USERS = USERS.filter(u => u.username !== username);
+                renderUserTable();
+                populateLoginUserSelect();
+                populateBrigadeDropdown();
+
+                fetch(`${GOOGLE_SCRIPT_URL}?action=deleteUser&username=${encodeURIComponent(username)}`, { method: 'GET', mode: 'no-cors' })
+                    .then(() => console.log("Хэрэглэгч Sheets-ээс устгагдлаа"))
+                    .catch(err => console.error("Устгахад алдаа:", err));
+            }
+        }
+
+        // --- BRIGADE DROPDOWN ---
+        function populateBrigadeDropdown(selectedStaff = []) {
+            const menu = document.getElementById('brigadeDropdownMenu');
+            if (!menu) return;
+            menu.innerHTML = '';
+            USERS.forEach((staff) => {
+                const roleDesc = staff.position ? `(${staff.position})` : '';
+                const fullName = `${staff.name} ${roleDesc}`.trim();
+                const isChecked = selectedStaff.includes(fullName) ? 'checked' : '';
+                const label = document.createElement('label');
+                label.className = 'flex items-center space-x-2.5 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition';
+                label.innerHTML = `
+                    <input type="checkbox" value="${fullName}" ${isChecked} onchange="updateBrigadeLabel()" class="brigade-checkbox rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 mt-0.5 flex-shrink-0">
+                    <span class="leading-tight"><strong class="text-slate-900">${staff.name}</strong> ${staff.position ? `<span class="text-xs text-slate-500 block sm:inline">(${staff.position})</span>` : ''}</span>
+                `;
+                menu.appendChild(label);
+            });
+            updateBrigadeLabel();
+        }
+
+        function updateBrigadeLabel() {
+            const checkboxes = document.querySelectorAll('.brigade-checkbox:checked');
+            const label = document.getElementById('brigadeDropdownLabel');
+            if (!label) return;
+            if (checkboxes.length === 0) {
+                label.innerText = "Ажилтнууд сонгох...";
+                label.className = "text-slate-400";
+            } else {
+                const names = Array.from(checkboxes).map(cb => cb.value.split(' (')[0]);
+                label.innerText = names.join(", ");
+                label.className = "text-slate-800 font-medium truncate";
+            }
+        }
+
+        function toggleBrigadeDropdown(event) {
+            event.stopPropagation();
+            const menu = document.getElementById('brigadeDropdownMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        function closeDropdownOutside(event) {
+            const dropdown = document.getElementById('brigadeDropdownMenu');
+            const btn = document.getElementById('brigadeDropdownBtn');
+            if (dropdown && btn && !dropdown.contains(event.target) && !btn.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
+        }
+
+        // --- LOGS & SHEETS DATA LOGIC ---
         function formatDateString(dateStr) {
             if (!dateStr) return '';
             return String(dateStr).includes('T') ? String(dateStr).split('T')[0] : String(dateStr);
@@ -660,51 +954,6 @@
             const input = document.getElementById('otherWorkText');
             input.disabled = !checkbox.checked;
             if(!checkbox.checked) input.value = '';
-        }
-
-        function toggleBrigadeDropdown(event) {
-            event.stopPropagation();
-            const menu = document.getElementById('brigadeDropdownMenu');
-            menu.classList.toggle('hidden');
-        }
-
-        function closeDropdownOutside(event) {
-            const dropdown = document.getElementById('brigadeDropdownMenu');
-            const btn = document.getElementById('brigadeDropdownBtn');
-            if (dropdown && btn && !dropdown.contains(event.target) && !btn.contains(event.target)) {
-                dropdown.classList.add('hidden');
-            }
-        }
-
-        function populateBrigadeDropdown(selectedStaff = []) {
-            const menu = document.getElementById('brigadeDropdownMenu');
-            menu.innerHTML = '';
-            brigadeStaffList.forEach((staff) => {
-                const fullName = `${staff.name} (${staff.role})`;
-                const isChecked = selectedStaff.includes(fullName) ? 'checked' : '';
-                const label = document.createElement('label');
-                label.className = 'flex items-center space-x-2.5 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition';
-                label.innerHTML = `
-                    <input type="checkbox" value="${fullName}" ${isChecked} onchange="updateBrigadeLabel()" class="brigade-checkbox rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 mt-0.5 flex-shrink-0">
-                    <span class="leading-tight"><strong class="text-slate-900">${staff.name}</strong> <span class="text-xs text-slate-500 block sm:inline">(${staff.role})</span></span>
-                `;
-                menu.appendChild(label);
-            });
-            updateBrigadeLabel();
-        }
-
-        function updateBrigadeLabel() {
-            const checkboxes = document.querySelectorAll('.brigade-checkbox:checked');
-            const label = document.getElementById('brigadeDropdownLabel');
-            
-            if (checkboxes.length === 0) {
-                label.innerText = "Ажилтнууд сонгох...";
-                label.className = "text-slate-400";
-            } else {
-                const names = Array.from(checkboxes).map(cb => cb.value.split(' (')[0]);
-                label.innerText = names.join(", ");
-                label.className = "text-slate-800 font-medium truncate";
-            }
         }
 
         function updateFilterDropdowns() {
@@ -945,7 +1194,6 @@
                 const worksArr = Array.isArray(log.works) ? log.works : [];
                 const brigadeArr = Array.isArray(log.brigade) ? log.brigade : [];
 
-                // ЭРХИЙН ХЯЗГААРЛАЛТ: Админ эсвэл өөрөө оруулсан бол товчнууд харагдана
                 const isOwner = currentUser && (log.createdBy === currentUser.name);
                 const isAdmin = currentUser && (currentUser.role === 'admin');
                 const canManage = isOwner || isAdmin;
