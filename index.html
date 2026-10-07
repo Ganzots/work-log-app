@@ -454,6 +454,14 @@
             fetchLogsFromSheet();
         };
 
+       function formatDateString(dateStr) {
+            if (!dateStr) return '';
+            if (dateStr.includes('T')) {
+                return dateStr.split('T')[0];
+            }
+            return dateStr;
+        }
+
         function fetchLogsFromSheet() {
             const container = document.getElementById('logsContainer');
             container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs"><i class="fa-solid fa-spinner fa-spin mr-1.5"></i> Мэдээлэл татаж байна...</div>`;
@@ -461,7 +469,12 @@
             fetch(`${GOOGLE_SCRIPT_URL}?action=get`)
                 .then(res => res.json())
                 .then(data => {
-                    workLogs = data.reverse(); // Хамгийн сүүлд нэмэгдсэн нь эхэнд харагдана
+                    workLogs = data.map(log => ({
+                        ...log,
+                        startDate: formatDateString(log.startDate),
+                        endDate: formatDateString(log.endDate)
+                    })).reverse();
+                    
                     updateFilterDropdowns();
                     renderLogs();
                 })
