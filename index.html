@@ -46,10 +46,10 @@
                     </div>
                     <div>
                         <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight flex items-center space-x-2">
-                            <span>АЖИЛ ГҮЙЦЭТГЭЛИЙН ТЭМДЭГЛЭЛ</span>
+                            <span>Ажил Гүйцэтгэлийн Тэмдэглэл</span>
                         </h1>
                         <p class="text-xs text-slate-500 flex items-center space-x-1">
-                            <span class="font-semibold text-slate-700">Диспетчерийн үндэсний төв ТӨХХК</span>
+                            <span class="font-semibold text-slate-700">Диспетчерийн үндэсний төв ТӨХК</span>
                             <span class="text-slate-300">|</span>
                             <span>Төв диспетчерийн алба-ТХХэсэг</span>
                         </p>
@@ -238,13 +238,13 @@
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                     <i class="fa-solid fa-magnifying-glass"></i>
                                 </span>
-                                <input type="text" id="searchInput" oninput="renderLogs()" placeholder="Түлхүүр үгээр хайх..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                                <input type="text" id="searchInput" oninput="resetPageAndRender()" placeholder="Түлхүүр үгээр хайх..." class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
                             </div>
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                     <i class="fa-solid fa-location-crosshairs text-xs"></i>
                                 </span>
-                                <select id="filterLocation" onchange="renderLogs()" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                                <select id="filterLocation" onchange="resetPageAndRender()" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
                                     <option value="">Бүх байршил</option>
                                 </select>
                             </div>
@@ -252,7 +252,7 @@
                                 <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                                     <i class="fa-solid fa-user-gear text-xs"></i>
                                 </span>
-                                <select id="filterStaff" onchange="renderLogs()" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                                <select id="filterStaff" onchange="resetPageAndRender()" class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
                                     <option value="">Бүх ажилтнууд</option>
                                 </select>
                             </div>
@@ -262,31 +262,46 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
                             <div class="flex items-center space-x-2">
                                 <span class="text-xs text-slate-500 font-medium whitespace-nowrap">Эхлэх огноо:</span>
-                                <input type="date" id="filterStartDate" onchange="renderLogs()" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                                <input type="date" id="filterStartDate" onchange="resetPageAndRender()" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
                             </div>
                             <div class="flex items-center space-x-2">
                                 <span class="text-xs text-slate-500 font-medium whitespace-nowrap">Дуусах огноо:</span>
-                                <input type="date" id="filterEndDate" onchange="renderLogs()" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
+                                <input type="date" id="filterEndDate" onchange="resetPageAndRender()" class="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition">
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Logs List -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex-grow flex flex-col">
-                    <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
-                        <div class="flex items-center space-x-2 text-indigo-600">
-                            <i class="fa-solid fa-rectangle-list text-lg"></i>
-                            <h2 class="text-base font-bold text-slate-900">Бүртгэгдсэн тэмдэглэлүүд</h2>
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex-grow flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                            <div class="flex items-center space-x-2 text-indigo-600">
+                                <i class="fa-solid fa-rectangle-list text-lg"></i>
+                                <h2 class="text-base font-bold text-slate-900">Бүртгэгдсэн тэмдэглэлүүд</h2>
+                            </div>
+                            <span id="logCountBadge" class="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-full flex items-center space-x-1">
+                                <i class="fa-solid fa-database text-[10px]"></i>
+                                <span>0 тэмдэглэл</span>
+                            </span>
                         </div>
-                        <span id="logCountBadge" class="text-xs bg-indigo-50 text-indigo-700 font-semibold px-2.5 py-1 rounded-full flex items-center space-x-1">
-                            <i class="fa-solid fa-database text-[10px]"></i>
-                            <span>0 тэмдэглэл</span>
-                        </span>
+
+                        <div id="logsContainer" class="space-y-4">
+                            <!-- Dynamic logs -->
+                        </div>
                     </div>
 
-                    <div id="logsContainer" class="space-y-4 overflow-y-auto max-h-[600px] pr-1">
-                        <!-- Dynamic logs -->
+                    <!-- Pagination Controls -->
+                    <div id="paginationContainer" class="flex items-center justify-between pt-6 mt-6 border-t border-slate-100 hidden">
+                        <button id="prevPageBtn" onclick="changePage(-1)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-1">
+                            <i class="fa-solid fa-chevron-left text-[10px]"></i>
+                            <span>Өмнөх</span>
+                        </button>
+                        <span id="pageInfo" class="text-xs text-slate-500 font-medium">Хуудас 1 / 1</span>
+                        <button id="nextPageBtn" onclick="changePage(1)" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center space-x-1">
+                            <span>Дараах</span>
+                            <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -297,7 +312,7 @@
     <!-- Footer Copyright -->
     <footer class="bg-white border-t border-slate-200 py-4 mt-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p>© 2026 Диспетчерийн үндэсний төв ТӨХХК. Бүх эрх хуулиар хамгаалагдсан.</p>
+            <p>© 2026 Диспетчерийн үндэсний төв ТӨХК. Бүх эрх хуулиар хамгаалагдсан.</p>
             <p class="text-slate-400">Технологи, холбооны хэсэг</p>
         </div>
     </footer>
@@ -326,7 +341,7 @@
                 
                 <div class="text-center border-b border-slate-200 pb-6">
                     <h2 class="text-xl font-bold text-slate-900 uppercase tracking-wide">Ажил гүйцэтгэлийн тэмдэглэл тайлан</h2>
-                    <p class="text-xs text-slate-500 mt-1">Диспетчерийн үндэсний төв ТӨХХК - Төв диспетчерийн алба (ТХХэсэг)</p>
+                    <p class="text-xs text-slate-500 mt-1">Диспетчерийн үндэсний төв ТӨХК - Төв диспетчерийн алба (ТХХэсэг)</p>
                 </div>
 
                 <div class="grid grid-cols-3 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 text-center">
@@ -394,7 +409,6 @@
     </div>
 
     <!-- JavaScript Logic -->
-    <!-- JavaScript Logic -->
     <script>
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwEh7SJQ_kVkp4s076GKZb3i9AvShZI6oWXU8vKjVBLG4vdMzg0d5algemm-MNUOF7g/exec";
 
@@ -410,8 +424,12 @@
             { name: "Д.Нацагдорж", role: "Технологийн холбооны хэсгийн ахлах инженер" }
         ];
 
-        const STORAGE_KEY = 'work_logs_txy_v18';
+        const STORAGE_KEY = 'work_logs_txy_v19';
         let workLogs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        // Pagination state
+        let currentPage = 1;
+        const itemsPerPage = 6;
 
         window.onload = function() {
             populateBrigadeDropdown();
@@ -498,6 +516,11 @@
             staffSelect.value = currentStaff;
         }
 
+        function resetPageAndRender() {
+            currentPage = 1;
+            renderLogs();
+        }
+
         function handleFormSubmit(event) {
             event.preventDefault();
 
@@ -556,7 +579,6 @@
                 workLogs.unshift(logData);
                 sendToGoogleSheets('add', logData);
             } else {
-                // For edit: delete old entry in sheet and add updated one to keep it clean
                 const oldLog = workLogs[parseInt(editIndex)];
                 sendToGoogleSheets('delete', oldLog);
                 workLogs[parseInt(editIndex)] = logData;
@@ -621,6 +643,11 @@
             renderLogs();
         }
 
+        function changePage(direction) {
+            currentPage += direction;
+            renderLogs();
+        }
+
         function renderLogs() {
             const query = document.getElementById('searchInput').value.toLowerCase();
             const filterLoc = document.getElementById('filterLocation').value;
@@ -628,6 +655,7 @@
             const filterStart = document.getElementById('filterStartDate').value;
             const filterEnd = document.getElementById('filterEndDate').value;
             const container = document.getElementById('logsContainer');
+            const paginationContainer = document.getElementById('paginationContainer');
 
             const filtered = workLogs.filter(log => {
                 const matchesQuery = log.location.toLowerCase().includes(query) ||
@@ -665,11 +693,20 @@
                         <p class="text-sm">Бүртгэгдсэн тэмдэглэл олдсонгүй</p>
                     </div>
                 `;
+                paginationContainer.classList.add('hidden');
                 return;
             }
 
+            // Pagination calculation
+            const totalPages = Math.ceil(filtered.length / itemsPerPage);
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIdx = (currentPage - 1) * itemsPerPage;
+            const paginatedLogs = filtered.slice(startIdx, startIdx + itemsPerPage);
+
             container.innerHTML = '';
-            filtered.forEach((log) => {
+            paginatedLogs.forEach((log) => {
                 const origIdx = workLogs.findIndex(item => item.id === log.id);
                 
                 const dateDisplay = log.startDate === log.endDate 
@@ -704,6 +741,16 @@
                 `;
                 container.appendChild(card);
             });
+
+            // Pagination UI update
+            if (totalPages > 1) {
+                paginationContainer.classList.remove('hidden');
+                document.getElementById('pageInfo').innerText = `Хуудас ${currentPage} / ${totalPages}`;
+                document.getElementById('prevPageBtn').disabled = currentPage === 1;
+                document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+            } else {
+                paginationContainer.classList.add('hidden');
+            }
         }
 
         function editLog(index) {
