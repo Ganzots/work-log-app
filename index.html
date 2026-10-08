@@ -104,7 +104,27 @@
                         </p>
                     </div>
                 </div>
-
+<!-- ЦАГ АГААР БОЛОН ОГНОО, ЦАГ ВИДЖЕТ -->
+                <div class="hidden xl:flex items-center space-x-3 bg-slate-50/80 border border-slate-200/80 px-3.5 py-1.5 rounded-xl text-xs">
+                    <!-- Цаг агаарын хэсэг -->
+                    <div class="flex items-center space-x-1.5 text-slate-700 pr-3 border-r border-slate-200">
+                        <span id="weatherIcon"><i class="fa-solid fa-cloud-sun text-amber-500 text-sm"></i></span>
+                        <span class="font-semibold text-slate-500 text-[11px]">УБ:</span>
+                        <span id="weatherTemp" class="font-bold text-slate-800">--°C</span>
+                    </div>
+                    <!-- Огноо ба амьд цаг -->
+                    <div class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-1 text-slate-600">
+                            <i class="fa-regular fa-calendar-days text-indigo-500 text-[11px]"></i>
+                            <span id="liveDate" class="font-medium">----.--.--</span>
+                        </div>
+                        <span class="text-slate-300">|</span>
+                        <div class="flex items-center space-x-1 text-indigo-600 font-bold font-mono">
+                            <i class="fa-regular fa-clock text-[11px]"></i>
+                            <span id="liveClock">00:00:00</span>
+                        </div>
+                    </div>
+                </div>
                 <div class="flex items-center space-x-2 sm:space-x-3">
                     <!-- 1. Хэрэглэгчийн таг & Гарах товч -->
                     <div class="flex items-center space-x-2 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-xl shadow-xs">
@@ -605,8 +625,72 @@
             setDefaultDates();
             fetchUsersFromSheet(); // Хэрэглэгчдийг хүснэгтээс татах
             fetchLogsFromSheet();  // Ажлын тэмдэглэлийг татах
+            startLiveClock();      // Цаг гүйлгэхийг эхлүүлэх
+            fetchWeather();        // Цаг агаар татах
         };
+// 1. Цаг, минут, секундыг амьдаар гүйлгэх функц
+        function startLiveClock() {
+            function updateClock() {
+                const now = new Date();
+                
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
 
+                const daysMn = ["Ням", "Даваа", "Мягмар", "Лхагва", "Пүрэв", "Баасан", "Бямба"];
+                const dayName = daysMn[now.getDay()];
+
+                const hh = String(now.getHours()).padStart(2, '0');
+                const min = String(now.getMinutes()).padStart(2, '0');
+                const ss = String(now.getSeconds()).padStart(2, '0');
+
+                const dateEl = document.getElementById('liveDate');
+                const clockEl = document.getElementById('liveClock');
+
+                if (dateEl) dateEl.innerText = `${yyyy}.${mm}.${dd} (${dayName})`;
+                if (clockEl) clockEl.innerText = `${hh}:${min}:${ss}`;
+            }
+
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        // 2. Улаанбаатар хотын одоогийн цаг агаар татах
+        function fetchWeather() {
+            const url = "https://api.open-meteo.com/v1/forecast?latitude=47.9188&longitude=106.9176&current=temperature_2m,weather_code&timezone=Asia%2FUlaanbaatar";
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.current) {
+                        const temp = Math.round(data.current.temperature_2m);
+                        const code = data.current.weather_code;
+
+                        const tempEl = document.getElementById('weatherTemp');
+                        const iconEl = document.getElementById('weatherIcon');
+
+                        if (tempEl) tempEl.innerText = (temp > 0 ? `+${temp}` : `${temp}`) + "°C";
+
+                        let iconHtml = '<i class="fa-solid fa-sun text-amber-500 text-sm"></i>';
+                        if (code === 1 || code === 2) {
+                            iconHtml = '<i class="fa-solid fa-cloud-sun text-amber-500 text-sm"></i>';
+                        } else if (code === 3) {
+                            iconHtml = '<i class="fa-solid fa-cloud text-slate-400 text-sm"></i>';
+                        } else if ([45, 48].includes(code)) {
+                            iconHtml = '<i class="fa-solid fa-smog text-slate-400 text-sm"></i>';
+                        } else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) {
+                            iconHtml = '<i class="fa-solid fa-cloud-rain text-blue-500 text-sm"></i>';
+                        } else if ([71, 73, 75, 77, 85, 86].includes(code)) {
+                            iconHtml = '<i class="fa-solid fa-snowflake text-sky-400 text-sm"></i>';
+                        }
+
+                        if (iconEl) iconEl.innerHTML = iconHtml;
+                    }
+                })
+                .catch(err => {
+                    console.error("Цаг агаар татахад алдаа гарлаа:", err);
+                });
+        }
         // --- FETCH USERS FROM GOOGLE SHEETS ---
         function fetchUsersFromSheet() {
             fetch(`${GOOGLE_SCRIPT_URL}?action=getUsers`)
