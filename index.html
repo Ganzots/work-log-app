@@ -1210,17 +1210,49 @@
             paginatedLogs.forEach((log) => {
                 const origIdx = workLogs.findIndex(item => item.id == log.id);
                 
-                let dateOnly = log.startDate || '';
-                let timeOnly = '';
+                let dateDisplay = log.startDate || '';
+                let timeDisplay = '';
+                let daysCountBadge = '';
 
-                if (log.timeRange && log.timeRange.includes('(')) {
+                // Олон өдөр дамжсан эсэхийг шалгах (жишээ: 2026-09-15 ~ 2026-09-17)
+                if (log.timeRange && log.timeRange.includes(' - ') && !log.timeRange.includes('(')) {
+                    // Хэрэв шууд "2026-09-15 09:00 - 2026-09-17 17:00" хэлбэртэй байвал
+                    const parts = log.timeRange.split(' - ');
+                    const startPart = parts[0].trim().split(' ');
+                    const endPart = parts[1].trim().split(' ');
+                    
+                    const d1 = startPart[0];
+                    const t1 = startPart[1] || '';
+                    const d2 = endPart[0];
+                    const t2 = endPart[1] || '';
+
+                    if (d1 !== d2) {
+                        dateDisplay = `${d1} ~ ${d2}`;
+                        timeDisplay = `${t1} ➔ ${t2}`.trim();
+                        // Хоногийн тоо бодох
+                        const days = Math.round((new Date(d2) - new Date(d1)) / (1000 * 60 * 60 * 24)) + 1;
+                        if (days > 1) {
+                            daysCountBadge = `<span class="bg-indigo-100 text-indigo-800 text-[11px] font-bold px-2 py-0.5 rounded-md border border-indigo-200">${days} хоног</span>`;
+                        }
+                    } else {
+                        dateDisplay = d1;
+                        timeDisplay = `${t1} - ${t2}`.trim();
+                    }
+                } else if (log.timeRange && log.timeRange.includes('(')) {
+                    // Нэг өдрийн "2026-09-15 (13:55 - 14:09)" хэлбэртэй байвал
                     const parts = log.timeRange.split('(');
-                    dateOnly = parts[0].trim();
-                    timeOnly = parts[1].replace(')', '').trim();
+                    dateDisplay = parts[0].trim();
+                    timeDisplay = parts[1].replace(')', '').trim();
+                } else if (log.startDate && log.endDate && log.startDate !== log.endDate) {
+                    // Form-оос шууд startDate, endDate ирж байгаа үед
+                    dateDisplay = `${log.startDate} ~ ${log.endDate}`;
+                    timeDisplay = (log.startTime && log.endTime) ? `${log.startTime} ➔ ${log.endTime}` : '';
+                    const days = Math.round((new Date(log.endDate) - new Date(log.startDate)) / (1000 * 60 * 60 * 24)) + 1;
+                    if (days > 1) {
+                        daysCountBadge = `<span class="bg-indigo-100 text-indigo-800 text-[11px] font-bold px-2 py-0.5 rounded-md border border-indigo-200">${days} хоног</span>`;
+                    }
                 } else if (log.startTime && log.endTime) {
-                    timeOnly = `${log.startTime} - ${log.endTime}`;
-                } else if (log.startTime) {
-                    timeOnly = log.startTime;
+                    timeDisplay = `${log.startTime} - ${log.endTime}`;
                 }
 
                 const worksArr = Array.isArray(log.works) ? log.works : [];
@@ -1251,14 +1283,14 @@
                     <div class="flex flex-wrap items-center justify-between gap-2">
                         <div class="flex items-center flex-wrap gap-1.5">
                             <span class="bg-indigo-600 text-white text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center space-x-1.5 shadow-sm">
-                                <i class="fa-regular fa-calendar text-[11px]"></i>
-                                <span>${dateOnly}</span>
-                            </span>
-                            ${timeOnly ? `
-                            <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center space-x-1.5">
-                                <i class="fa-regular fa-clock text-[11px] text-indigo-500"></i>
-                                <span>${timeOnly}</span>
-                            </span>` : ''}
+    <i class="fa-regular fa-calendar text-[11px]"></i>
+    <span>${dateDisplay}</span>
+</span>
+${daysCountBadge}${timeDisplay ? `
+<span class="bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center space-x-1.5">
+    <i class="fa-regular fa-clock text-[11px] text-indigo-500"></i>
+    <span>${timeDisplay}</span>
+</span>` : ''}
                         </div>
 
                         ${actionButtonsHtml}
